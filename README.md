@@ -16,6 +16,8 @@ Our method outperforms strong baselines both on Paper2Code and PaperBench and pr
 ```bash
 pip install openai
 
+export OPENAI_API_KEY="<OPENAI_API_KEY>"
+
 cd scripts
 bash run.sh
 ```
@@ -63,6 +65,8 @@ python ./s2orc-doc2json/doc2json/grobid2json/process_pdf.py \
   If you want to run PaperCoder on your own paper, please modify the environment variables accordingly.
 
 ```bash
+export OPENAI_API_KEY="<OPENAI_API_KEY>"
+
 cd scripts
 bash run.sh
 ```
