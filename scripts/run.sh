@@ -1,4 +1,4 @@
-export OPENAI_API_KEY=""
+# export OPENAI_API_KEY=""
 
 GPT_VERSION="o3-mini"
 
