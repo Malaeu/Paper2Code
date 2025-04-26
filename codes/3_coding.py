@@ -4,7 +4,7 @@ import os
 from tqdm import tqdm
 import re
 import copy
-from utils import extract_planning, content_to_json, extract_code_from_content
+from utils import extract_planning, content_to_json, extract_code_from_content, print_response, print_log_cost, load_accumulated_cost, save_accumulated_cost
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -151,12 +151,16 @@ for todo_file_name in todo_file_lst:
         detailed_logic_analysis_response = json.load(f)
     detailed_logic_analysis_dict[todo_file_name] = detailed_logic_analysis_response[0]['choices'][0]['message']['content']
 
+artifact_output_dir=f'{output_dir}/coding_artifacts'
+os.makedirs(artifact_output_dir, exist_ok=True)
 
+total_accumulated_cost = load_accumulated_cost(f"{output_dir}/accumulated_cost.json")
 for todo_idx, todo_file_name in enumerate(tqdm(todo_file_lst)):
     responses = []
     trajectories = copy.deepcopy(code_msg)
 
-    print(f"[CODING] {todo_file_name}")
+    current_stage = f"[CODING] {todo_file_name}"
+    print(current_stage)
 
     if todo_file_name == "config.yaml":
         continue
@@ -182,6 +186,17 @@ for todo_idx, todo_file_name in enumerate(tqdm(todo_file_lst)):
     os.makedirs(f'{output_repo_dir}', exist_ok=True)
     save_todo_file_name = todo_file_name.replace("/", "_")
 
+
+    # print and logging
+    print_response(completion_json)
+    temp_total_accumulated_cost = print_log_cost(completion_json, gpt_version, current_stage, output_dir, total_accumulated_cost)
+    total_accumulated_cost = temp_total_accumulated_cost
+
+    # save artifacts
+    with open(f'{artifact_output_dir}/{save_todo_file_name}_coding.txt', 'w') as f:
+        f.write(completion_json['choices'][0]['message']['content'])
+
+
     # extract code save 
     code = extract_code_from_content(message.content)
     if len(code) == 0:
@@ -194,4 +209,5 @@ for todo_idx, todo_file_name in enumerate(tqdm(todo_file_lst)):
 
     with open(f"{output_repo_dir}/{todo_file_name}", 'w') as f:
         f.write(code)
-    
+
+save_accumulated_cost(f"{output_dir}/accumulated_cost.json", total_accumulated_cost)
