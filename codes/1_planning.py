@@ -3,6 +3,7 @@ import json
 from tqdm import tqdm
 import argparse
 import os
+from utils import print_response, print_log_cost, load_accumulated_cost, save_accumulated_cost
 
 parser = argparse.ArgumentParser()
 
@@ -216,23 +217,32 @@ def api_call(msg, gpt_version):
 
 responses = []
 trajectories = []
+total_accumulated_cost = 0
 
 for idx, instruction_msg in enumerate([plan_msg, file_list_msg, task_list_msg, config_msg]):
+    current_stage = ""
     if idx == 0 :
-        print(f"[Planning] Overall plan")
+        current_stage = f"[Planning] Overall plan"
     elif idx == 1:
-        print(f"[Planning] Architecture design")
+        current_stage = f"[Planning] Architecture design"
     elif idx == 2:
-        print(f"[Planning] Logic design")
+        current_stage = f"[Planning] Logic design"
     elif idx == 3:
-        print(f"[Planning] Configuration file generation")
-        
+        current_stage = f"[Planning] Configuration file generation"
+    print(current_stage)
+
     trajectories.extend(instruction_msg)
 
     completion = api_call(trajectories, gpt_version)
     
     # response
     completion_json = json.loads(completion.model_dump_json())
+
+    # print and logging
+    print_response(completion_json)
+    temp_total_accumulated_cost = print_log_cost(completion_json, gpt_version, current_stage, output_dir, total_accumulated_cost)
+    total_accumulated_cost = temp_total_accumulated_cost
+
     responses.append(completion_json)
 
     # trajectories
@@ -241,6 +251,8 @@ for idx, instruction_msg in enumerate([plan_msg, file_list_msg, task_list_msg, c
 
 
 # save
+save_accumulated_cost(f"{output_dir}/accumulated_cost.json", total_accumulated_cost)
+
 os.makedirs(output_dir, exist_ok=True)
 
 with open(f'{output_dir}/planning_response.json', 'w') as f:
