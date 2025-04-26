@@ -12,6 +12,7 @@ Our method outperforms strong baselines both on Paper2Code and PaperBench and pr
 
 ## ⚡ QuickStart
 - Note: The following command runs example paper ([Attention Is All You Need](https://arxiv.org/abs/1706.03762)).  
+- 💵 Estimated cost for using o3-mini: $0.50–$0.70
 
 ```bash
 pip install openai
@@ -22,6 +23,15 @@ cd scripts
 bash run.sh
 ```
 
+### Output Folder Structure (Only Important Files)
+```bash
+outputs
+├── Transformer
+│   ├── analyzing_artifacts
+│   ├── coding_artifacts
+│   └── planning_artifacts
+└── Transformer_repo  # Final output repository
+```
 ---
 
 ## 📚 Detailed Setup Instructions
