@@ -1,6 +1,7 @@
 import json
 import re
 import os
+from datetime import datetime
 
 def extract_planning(trajectories_json_file_path):
     with open(trajectories_json_file_path) as f:
@@ -277,3 +278,134 @@ def print_log_cost(completion_json, gpt_version, current_stage, output_dir, tota
         f.write(output_text + "\n")
     
     return total_accumulated_cost
+
+
+def num_tokens_from_messages(messages, model="gpt-4o-2024-08-06"):
+    import tiktoken
+    
+    """Return the number of tokens used by a list of messages."""
+    try:
+        encoding = tiktoken.encoding_for_model(model)
+    except KeyError:
+        print("Warning: model not found. Using o200k_base encoding.")
+        encoding = tiktoken.get_encoding("o200k_base")
+    if model in {
+        "gpt-3.5-turbo-0125",
+        "gpt-4-0314",
+        "gpt-4-32k-0314",
+        "gpt-4-0613",
+        "gpt-4-32k-0613",
+        "gpt-4o-mini-2024-07-18",
+        "gpt-4o-2024-08-06"
+        }:
+        tokens_per_message = 3
+        tokens_per_name = 1
+    elif "gpt-3.5-turbo" in model:
+        print("Warning: gpt-3.5-turbo may update over time. Returning num tokens assuming gpt-3.5-turbo-0125.")
+        return num_tokens_from_messages(messages, model="gpt-3.5-turbo-0125")
+    elif "gpt-4o-mini" in model:
+        print("Warning: gpt-4o-mini may update over time. Returning num tokens assuming gpt-4o-mini-2024-07-18.")
+        return num_tokens_from_messages(messages, model="gpt-4o-mini-2024-07-18")
+    elif "gpt-4o" in model:
+        print("Warning: gpt-4o and gpt-4o-mini may update over time. Returning num tokens assuming gpt-4o-2024-08-06.")
+        return num_tokens_from_messages(messages, model="gpt-4o-2024-08-06")
+
+    elif "gpt-4" in model:
+        print("Warning: gpt-4 may update over time. Returning num tokens assuming gpt-4-0613.")
+        return num_tokens_from_messages(messages, model="gpt-4-0613")
+    else:
+        raise NotImplementedError(
+            f"""num_tokens_from_messages() is not implemented for model {model}."""
+        )
+    num_tokens = 0
+    for message in messages:
+        num_tokens += tokens_per_message
+        for key, value in message.items():
+            # num_tokens += len(encoding.encode(value) 
+            num_tokens += len(encoding.encode(value, allowed_special={"<|endoftext|>"},disallowed_special=()))
+            
+            if key == "name":
+                num_tokens += tokens_per_name
+    num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
+    return num_tokens
+
+
+
+def read_all_files(directory, allowed_ext, is_print=True): 
+    """Recursively read all .py files in the specified directory and return their contents."""
+    all_files_content = {}
+    
+    for root, _, files in os.walk(directory):  # Recursively traverse directories
+        for filename in files:
+            relative_path = os.path.relpath(os.path.join(root, filename), directory)  # Preserve directory structure
+
+            # print(f"fn: {filename}\tdirectory: {directory}")
+            _file_name, ext = os.path.splitext(filename)
+            
+            is_skip = False
+            if len(directory) < len(root):
+                root2 = root[len(directory)+1:]
+                for dirname in root2.split("/"):
+                    if dirname.startswith("."):
+                        is_skip = True
+                        break
+            
+            if filename.startswith(".") or "requirements.txt" in filename or ext == "" or is_skip:
+                if is_print and ext == "":
+                    print(f"[SKIP] {os.path.join(root, filename)}")
+                continue
+                
+            if ext not in allowed_ext:
+                if _file_name.lower() != "readme": 
+                    if is_print:
+                        print(f"[SKIP] {os.path.join(root, filename)}")
+                    continue
+
+            try:
+                filepath = os.path.join(root, filename)
+                file_size = os.path.getsize(filepath) # bytes
+                
+                if file_size > 204800: # > 200KB 
+                    print(f"[BIG] {filepath} {file_size}")
+
+                with open(filepath, "r") as file: # encoding="utf-8"
+                    all_files_content[relative_path] = file.read()
+            except Exception as e:
+                print(e)
+                print(f"[SKIP] {os.path.join(root, filename)}")
+    
+    
+    return all_files_content
+
+def read_python_files(directory):
+    """Recursively read all .py files in the specified directory and return their contents."""
+    python_files_content = {}
+    
+    for root, _, files in os.walk(directory):  # Recursively traverse directories
+        for filename in files:
+            if filename.endswith(".py"):  # Check if file has .py extension
+                relative_path = os.path.relpath(os.path.join(root, filename), directory)  # Preserve directory structure
+                with open(os.path.join(root, filename), "r", encoding="utf-8") as file:
+                    python_files_content[relative_path] = file.read()
+    
+    return python_files_content
+  
+
+def extract_json_from_string(text):
+    # Extract content inside ```yaml\n...\n```
+    match = re.search(r"```json\n(.*?)\n```", text, re.DOTALL)
+
+    if match:
+        yaml_content = match.group(1)
+        return yaml_content
+    else:
+        print("No JSON content found.")
+        return ""
+
+
+def get_now_str():
+    now = datetime.now()
+    now = str(now)
+    now = now.split(".")[0]
+    now = now.replace("-","").replace(" ","_").replace(":","")
+    return now # now - "20250427_205124"
