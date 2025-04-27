@@ -229,7 +229,7 @@ if __name__ == '__main__':
     
     argparser.add_argument('--paper_name', type=str)
     argparser.add_argument('--pdf_json_path', type=str)
-    argparser.add_argument('--data_dir',type=str, default="../data/prompts")
+    argparser.add_argument('--data_dir',type=str, default="../data")
 
     argparser.add_argument('--output_dir',type=str)
     
