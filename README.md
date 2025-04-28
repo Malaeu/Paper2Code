@@ -93,7 +93,7 @@ python ./s2orc-doc2json/doc2json/grobid2json/process_pdf.py \
 - Note: The following command runs example paper ([Attention Is All You Need](https://arxiv.org/abs/1706.03762)).  
   If you want to run PaperCoder on your own paper, please modify the environment variables accordingly.
 
-### Using OpenAI API
+#### Using OpenAI API
 - 💵 Estimated cost for using o3-mini: $0.50–$0.70
 
 ```bash
@@ -103,7 +103,7 @@ cd scripts
 bash run.sh
 ```
 
-### Using Open Source Models with vLLM
+#### Using Open Source Models with vLLM
 - The default model is `deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct`.
 - 
 ```bash
