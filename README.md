@@ -12,6 +12,8 @@ Our method outperforms strong baselines both on Paper2Code and PaperBench and pr
 
 ## ⚡ QuickStart
 - Note: The following command runs example paper ([Attention Is All You Need](https://arxiv.org/abs/1706.03762)).  
+
+### Using OpenAI API
 - 💵 Estimated cost for using o3-mini: $0.50–$0.70
 
 ```bash
@@ -21,6 +23,16 @@ export OPENAI_API_KEY="<OPENAI_API_KEY>"
 
 cd scripts
 bash run.sh
+```
+
+### Using Open Source Models with vLLM
+If you encounter any issues installing vLLM, please refer to the [official vllm repository](https://github.com/vllm-project/vllm).
+
+```bash
+pip install vllm
+
+cd scripts
+bash run_llm.sh
 ```
 
 ### Output Folder Structure (Only Important Files)
@@ -38,10 +50,14 @@ outputs
 
 ### 🛠️ Environment Setup
 
-- Note: If you wish to use the `o3-mini` version, please make sure to install the latest version of the OpenAI package.
+- 💡 To use the `o3-mini` version, make sure you have the latest `openai` package installed.
+- 📦 Install only what you need:
+  - For OpenAI API: `openai`
+  - For open-source models: `vllm`
 
 ```bash
-pip install openai
+pip install openai 
+pip install vllm 
 ```
 
 ### 📄 Convert PDF to JSON
@@ -74,6 +90,9 @@ python ./s2orc-doc2json/doc2json/grobid2json/process_pdf.py \
 - Note: The following command runs example paper ([Attention Is All You Need](https://arxiv.org/abs/1706.03762)).  
   If you want to run PaperCoder on your own paper, please modify the environment variables accordingly.
 
+### Using OpenAI API
+- 💵 Estimated cost for using o3-mini: $0.50–$0.70
+
 ```bash
 export OPENAI_API_KEY="<OPENAI_API_KEY>"
 
@@ -81,6 +100,12 @@ cd scripts
 bash run.sh
 ```
 
+### Using Open Source Models with vLLM
+
+```bash
+cd scripts
+bash run_llm.sh
+```
 
 ---
 
@@ -136,6 +161,7 @@ python eval.py \
     --papercoder
 ```
 
+---
 
 ### 📄 Example Output
 ```bash
@@ -158,4 +184,3 @@ python eval.py \
 🪙 Accumulated total cost so far: $0.16451380
 ============================================
 ```
-
