@@ -91,12 +91,30 @@ def content_to_json3(data):
         return json_data
     
     except json.JSONDecodeError as e:
-        print(e)
+        # print(e)
         
         # print(f"[DEBUG] utils.py > content_to_json3 ")
-        return None 
+        # return None 
+        return content_to_json4(data)
     
+def content_to_json4(data):
+    # 1. Extract Logic Analysis, Task list
+    pattern = r'"Logic Analysis":\s*(\[[\s\S]*?\])\s*,\s*"Task list":\s*(\[[\s\S]*?\])'
+    match = re.search(pattern, data)
 
+    if match:
+        logic_analysis = json.loads(match.group(1))
+        task_list = json.loads(match.group(2))
+
+        result = {
+            "Logic Analysis": logic_analysis,
+            "Task list": task_list
+        }
+    else:
+        result = {}
+
+    # print(json.dumps(result, indent=2))
+    return result
 
 def extract_code_from_content(content):
     pattern = r'^```(?:\w+)?\s*\n(.*?)(?=^```)```'
@@ -106,6 +124,16 @@ def extract_code_from_content(content):
     else:
         return code[0]
     
+def extract_code_from_content2(content):
+    pattern = r'```python\s*(.*?)```'
+    result = re.search(pattern, content, re.DOTALL)
+
+    if result:
+        extracted_code = result.group(1).strip()
+    else:
+        extracted_code = ""
+        print("[WARNING] No Python code found.")
+    return extracted_code
 
 def format_json_data(data):
     formatted_text = ""
@@ -248,9 +276,12 @@ def save_accumulated_cost(accumulated_cost_file, cost):
     with open(accumulated_cost_file, "w", encoding="utf-8") as f:
         json.dump({"total_cost": cost}, f)
 
-def print_response(completion_json):
+def print_response(completion_json, is_llm=False):
     print("============================================")
-    print(completion_json['choices'][0]['message']['content'])
+    if is_llm:
+        print(completion_json['text'])
+    else:
+        print(completion_json['choices'][0]['message']['content'])
     print("============================================\n")
 
 def print_log_cost(completion_json, gpt_version, current_stage, output_dir, total_accumulated_cost):
