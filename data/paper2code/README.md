@@ -10,16 +10,19 @@ Using a model-based evaluation, we selected the **top 30 papers** from each conf
 A full list of the benchmark papers is provided in `dataset_info.json`.
 For more details, refer to Section 4.1 "Paper2Code Benchmark" of the [paper](https://arxiv.org/abs/2504.17192).
 
+
 ### How to Use
 - Unzip the `paper2code_data.zip` file:
 ```bash
 unzip paper2code_data.zip
 ```
+- If you also need the JSON files paired with the original PDFs, please download `paper2code_full_data.zip` from [this link](https://drive.google.com/file/d/1OTO6nk8s7Q8FzRm2FeyqFLI06l1NCujc/view?usp=drive_link).
 
 ### Data Structure
 Each conference folder is organized as follows:
 - `[PAPER].json` — Parsed version of the paper
 - `[PAPER]_cleaned.json` — Preprocessed version for PaperCoder
+- `pdfs/[PAPER].pdf` — Original paper PDF (only available in `paper2code_full_data.zip`)
 
 ```bash
 ├── iclr2024 
@@ -29,5 +32,9 @@ Each conference folder is organized as follows:
     ├── adaptive-randomized-smoothing_cleaned.json
     ├── ... 
     ├── YOLA.json
-    └── YOLA_cleaned.json
+    ├── YOLA_cleaned.json
+    └── pdfs  # only available in `paper2code_full_data.zip`
+        ├── adaptive-randomized-smoothing.pdf
+        ├── ... 
+        └── YOLA.pdf
 ```
