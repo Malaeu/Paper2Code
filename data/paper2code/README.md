@@ -8,6 +8,7 @@ To ensure manageable complexity, we filtered for repositories with fewer than **
 Using a model-based evaluation, we selected the **top 30 papers** from each conference based on repository quality.
 
 A full list of the benchmark papers is provided in `dataset_info.json`.
+
 For more details, refer to Section 4.1 "Paper2Code Benchmark" of the [paper](https://arxiv.org/abs/2504.17192).
 
 
