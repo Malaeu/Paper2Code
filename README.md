@@ -10,6 +10,17 @@ Our method outperforms strong baselines both on Paper2Code and PaperBench and pr
 
 ---
 
+## 🗺️ Table of Contents
+
+- [⚡ QuickStart](#-quickstart)
+- [📚 Detailed Setup Instructions](#-detailed-setup-instructions)
+- [🚀 Running PaperCoder](#-runing-papercoder)
+- [📦 Paper2Code Benchmark Datasets](#-paper2code-benchmark-datasets)
+- [📊 Model-based Evaluation of Repositories](#-model-based-evaluation-of-repositories-generated-by-papercoder)
+- [📄 Example Output](#-example-output)
+
+---
+
 ## ⚡ QuickStart
 - Note: The following command runs example paper ([Attention Is All You Need](https://arxiv.org/abs/1706.03762)).  
 
@@ -110,6 +121,13 @@ bash run.sh
 cd scripts
 bash run_llm.sh
 ```
+
+---
+
+## 📦 Paper2Code Benchmark Datasets
+
+- You can find the description of the Paper2Code benchmark dataset in [data/paper2code](https://github.com/going-doer/Paper2Code/tree/main/data/paper2code).
+- For more details, refer to Section 4.1 "Paper2Code Benchmark" in the [paper](https://arxiv.org/abs/2504.17192).
 
 ---
 
