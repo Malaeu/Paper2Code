@@ -26,7 +26,8 @@ bash run.sh
 ```
 
 ### Using Open Source Models with vLLM
-If you encounter any issues installing vLLM, please refer to the [official vllm repository](https://github.com/vllm-project/vllm).
+- If you encounter any issues installing vLLM, please refer to the [official vLLM repository](https://github.com/vllm-project/vllm).
+- The default model is `deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct`.
 
 ```bash
 pip install vllm
@@ -54,6 +55,8 @@ outputs
 - 📦 Install only what you need:
   - For OpenAI API: `openai`
   - For open-source models: `vllm`
+      - If you encounter any issues installing vLLM, please refer to the [official vLLM repository](https://github.com/vllm-project/vllm).
+
 
 ```bash
 pip install openai 
@@ -101,7 +104,8 @@ bash run.sh
 ```
 
 ### Using Open Source Models with vLLM
-
+- The default model is `deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct`.
+- 
 ```bash
 cd scripts
 bash run_llm.sh
@@ -161,7 +165,6 @@ python eval.py \
     --papercoder
 ```
 
----
 
 ### 📄 Example Output
 ```bash
