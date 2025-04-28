@@ -105,7 +105,7 @@ bash run.sh
 
 #### Using Open Source Models with vLLM
 - The default model is `deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct`.
-- 
+
 ```bash
 cd scripts
 bash run_llm.sh
