@@ -39,3 +39,7 @@ Each conference folder is organized as follows:
         ├── ... 
         └── YOLA.pdf
 ```
+
+### License and Usage
+This dataset is a parsed version of publicly available papers from ICML, ICLR, and NeurIPS. 
+The original papers are under copyright by the respective conferences or authors. 
