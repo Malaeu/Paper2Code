@@ -72,6 +72,12 @@ pip install openai
 pip install vllm 
 ```
 
+- Or, if you prefer, you can install all dependencies using `pip`:
+
+```bash
+pip install -r requirements.txt
+```
+
 ### 📄 Convert PDF to JSON
 
 1. Clone the `s2orc-doc2json` repository to convert your PDF file into a structured JSON format.  
