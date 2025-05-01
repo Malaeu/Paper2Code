@@ -129,9 +129,11 @@ bash run_llm.sh
 ---
 
 ## 📦 Paper2Code Benchmark Datasets
-
-- You can find the description of the Paper2Code benchmark dataset in [data/paper2code](https://github.com/going-doer/Paper2Code/tree/main/data/paper2code).
+- Huggingface dataset: [paper2code](https://huggingface.co/datasets/iaminju/paper2code)
+  
+- You can find the description of the Paper2Code benchmark dataset in [data/paper2code](https://github.com/going-doer/Paper2Code/tree/main/data/paper2code). 
 - For more details, refer to Section 4.1 "Paper2Code Benchmark" in the [paper](https://arxiv.org/abs/2504.17192).
+
 
 ---
 
