@@ -11,6 +11,7 @@ A full list of the benchmark papers is provided in `dataset_info.json`.
 
 For more details, refer to Section 4.1 "Paper2Code Benchmark" of the [paper](https://arxiv.org/abs/2504.17192).
 
+To use the dataset on Hugging Face, see the [Paper2Code dataset page](https://huggingface.co/datasets/iaminju/paper2code).
 
 ### How to Use
 - Unzip the `paper2code_data.zip` file:
