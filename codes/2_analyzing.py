@@ -2,7 +2,7 @@ from openai import OpenAI
 import json
 import os
 from tqdm import tqdm
-import re
+import sys
 from utils import extract_planning, content_to_json, print_response, print_log_cost, load_accumulated_cost, save_accumulated_cost
 import copy
 
@@ -12,7 +12,9 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--paper_name',type=str)
 parser.add_argument('--gpt_version',type=str, default="o3-mini")
+parser.add_argument('--paper_format',type=str, default="JSON", choices=["JSON", "LaTeX"])
 parser.add_argument('--pdf_json_path', type=str) # json format
+parser.add_argument('--pdf_latex_path', type=str) # latex format
 parser.add_argument('--output_dir',type=str, default="")
 
 args    = parser.parse_args()
@@ -21,11 +23,21 @@ client = OpenAI(api_key = os.environ["OPENAI_API_KEY"])
 
 paper_name = args.paper_name
 gpt_version = args.gpt_version
+paper_format = args.paper_format
 pdf_json_path = args.pdf_json_path
+pdf_latex_path = args.pdf_latex_path
 output_dir = args.output_dir
     
-with open(f'{pdf_json_path}') as f:
-    paper_json = json.load(f)
+if paper_format == "JSON":
+    with open(f'{pdf_json_path}') as f:
+        paper_content = json.load(f)
+elif paper_format == "LaTeX":
+    with open(f'{pdf_latex_path}') as f:
+        paper_content = f.read()
+else:
+    print(f"[ERROR] Invalid paper format. Please select either 'JSON' or 'LaTeX.")
+    sys.exit(0)
+
 
 with open(f'{output_dir}/planning_config.yaml') as f: 
     config_yaml = f.read()
@@ -39,16 +51,34 @@ if os.path.exists(f'{output_dir}/task_list.json'):
 else:
     task_list = content_to_json(context_lst[2])
 
+if 'Task list' in task_list:
+    todo_file_lst = task_list['Task list']
+elif 'task_list' in task_list:
+    todo_file_lst = task_list['task_list']
+elif 'task list' in task_list:
+    todo_file_lst = task_list['task list']
+else:
+    print(f"[ERROR] 'Task list' does not exist. Please re-generate the planning.")
+    sys.exit(0)
 
-todo_file_lst = task_list['Task list']
+if 'Logic Analysis' in task_list:
+    logic_analysis = task_list['Logic Analysis']
+elif 'logic_analysis' in task_list:
+    logic_analysis = task_list['logic_analysis']
+elif 'logic analysis' in task_list:
+    logic_analysis = task_list['logic analysis']
+else:
+    print(f"[ERROR] 'Logic Analysis' does not exist. Please re-generate the planning.")
+    sys.exit(0)
+    
 done_file_lst = ['config.yaml']
 logic_analysis_dict = {}
 for desc in task_list['Logic Analysis']:
     logic_analysis_dict[desc[0]] = desc[1]
 
 analysis_msg = [
-    {"role": "system", "content": """You are an expert researcher, strategic analyzer and software engineer with a deep understanding of experimental design and reproducibility in scientific research.
-You will receive a research paper in JSON format, an overview of the plan, a design in JSON format consisting of "Implementation approach", "File list", "Data structures and interfaces", and "Program call flow", followed by a task in JSON format that includes "Required packages", "Required other language third-party packages", "Logic Analysis", and "Task list", along with a configuration file named "config.yaml". 
+    {"role": "system", "content": f"""You are an expert researcher, strategic analyzer and software engineer with a deep understanding of experimental design and reproducibility in scientific research.
+You will receive a research paper in {paper_format} format, an overview of the plan, a design in JSON format consisting of "Implementation approach", "File list", "Data structures and interfaces", and "Program call flow", followed by a task in JSON format that includes "Required packages", "Required other language third-party packages", "Logic Analysis", and "Task list", along with a configuration file named "config.yaml". 
 
 Your task is to conduct a comprehensive logic analysis to accurately reproduce the experiments and methodologies described in the research paper. 
 This analysis must align precisely with the paper’s methodology, experimental setup, and evaluation criteria.
@@ -68,7 +98,7 @@ def get_write_msg(todo_file_name, todo_file_desc):
         draft_desc = f"Write the logic analysis in '{todo_file_name}'."
 
     write_msg=[{'role': 'user', "content": f"""## Paper
-{paper_json}
+{paper_content}
 
 -----
 
