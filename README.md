@@ -12,7 +12,7 @@ Our method outperforms strong baselines on both Paper2Code and PaperBench and pr
 
 ## 🗺️ Table of Contents
 
-- [⚡ QuickStart](#-quick-start)
+- [⚡ Quick Start](#-quick-start)
 - [📚 Detailed Setup Instructions](#-detailed-setup-instructions)
 - [📦 Paper2Code Benchmark Datasets](#-paper2code-benchmark-datasets)
 - [📊 Model-based Evaluation of Repositories](#-model-based-evaluation-of-repositories-generated-by-papercoder)
