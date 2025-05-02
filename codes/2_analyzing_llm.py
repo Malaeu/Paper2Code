@@ -18,7 +18,10 @@ parser.add_argument('--tp_size',type=int, default=2)
 parser.add_argument('--temperature',type=float, default=1.0)
 parser.add_argument('--max_model_len',type=int, default=128000)
 
+parser.add_argument('--paper_format',type=str, default="JSON", choices=["JSON", "LaTeX"])
 parser.add_argument('--pdf_json_path', type=str) # json format
+parser.add_argument('--pdf_latex_path', type=str) # latex format
+
 parser.add_argument('--output_dir',type=str, default="")
 
 args    = parser.parse_args()
@@ -30,11 +33,21 @@ tp_size = args.tp_size
 max_model_len = args.max_model_len
 temperature = args.temperature
 
+paper_format = args.paper_format
 pdf_json_path = args.pdf_json_path
+pdf_latex_path = args.pdf_latex_path
+
 output_dir = args.output_dir
     
-with open(f'{pdf_json_path}') as f:
-    paper_json = json.load(f)
+if paper_format == "JSON":
+    with open(f'{pdf_json_path}') as f:
+        paper_content = json.load(f)
+elif paper_format == "LaTeX":
+    with open(f'{pdf_latex_path}') as f:
+        paper_content = f.read()
+else:
+    print(f"[ERROR] Invalid paper format. Please select either 'JSON' or 'LaTeX.")
+    sys.exit(0)
 
 with open(f'{output_dir}/planning_config.yaml') as f: 
     config_yaml = f.read()
@@ -74,8 +87,8 @@ for desc in logic_analysis:
     logic_analysis_dict[desc[0]] = desc[1]
 
 analysis_msg = [
-    {"role": "system", "content": """You are an expert researcher, strategic analyzer and software engineer with a deep understanding of experimental design and reproducibility in scientific research.
-You will receive a research paper in JSON format, an overview of the plan, a design in JSON format consisting of "Implementation approach", "File list", "Data structures and interfaces", and "Program call flow", followed by a task in JSON format that includes "Required packages", "Required other language third-party packages", "Logic Analysis", and "Task list", along with a configuration file named "config.yaml". 
+    {"role": "system", "content": f"""You are an expert researcher, strategic analyzer and software engineer with a deep understanding of experimental design and reproducibility in scientific research.
+You will receive a research paper in {paper_format} format, an overview of the plan, a design in JSON format consisting of "Implementation approach", "File list", "Data structures and interfaces", and "Program call flow", followed by a task in JSON format that includes "Required packages", "Required other language third-party packages", "Logic Analysis", and "Task list", along with a configuration file named "config.yaml". 
 
 Your task is to conduct a comprehensive logic analysis to accurately reproduce the experiments and methodologies described in the research paper. 
 This analysis must align precisely with the paper’s methodology, experimental setup, and evaluation criteria.
@@ -95,7 +108,7 @@ def get_write_msg(todo_file_name, todo_file_desc):
         draft_desc = f"Write the logic analysis in '{todo_file_name}'."
 
     write_msg=[{'role': 'user', "content": f"""## Paper
-{paper_json}
+{paper_content}
 
 -----
 
