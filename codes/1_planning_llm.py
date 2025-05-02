@@ -1,6 +1,7 @@
 import json
 import argparse
 import os
+import sys
 from utils import print_response
 from transformers import AutoTokenizer
 from vllm import LLM, SamplingParams
@@ -14,13 +15,18 @@ parser.add_argument('--tp_size',type=int, default=2)
 parser.add_argument('--temperature',type=float, default=1.0)
 parser.add_argument('--max_model_len',type=int, default=128000)
 
+parser.add_argument('--paper_format',type=str, default="JSON", choices=["JSON", "LaTeX"])
 parser.add_argument('--pdf_json_path', type=str) # json format
+parser.add_argument('--pdf_latex_path', type=str) # latex format
+
 parser.add_argument('--output_dir',type=str, default="")
 
 args    = parser.parse_args()
 
 paper_name = args.paper_name
+paper_format = args.paper_format
 pdf_json_path = args.pdf_json_path
+pdf_latex_path = args.pdf_latex_path
 output_dir = args.output_dir
 
 model_name = args.model_name
@@ -28,12 +34,19 @@ tp_size = args.tp_size
 max_model_len = args.max_model_len
 temperature = args.temperature
 
-with open(f'{pdf_json_path}') as f:
-    paper_json = json.load(f)
+if paper_format == "JSON":
+    with open(f'{pdf_json_path}') as f:
+        paper_content = json.load(f)
+elif paper_format == "LaTeX":
+    with open(f'{pdf_latex_path}') as f:
+        paper_content = f.read()
+else:
+    print(f"[ERROR] Invalid paper format. Please select either 'JSON' or 'LaTeX.")
+    sys.exit(0)
 
 plan_msg = [
-        {'role': "system", "content": """You are an expert researcher and strategic planner with a deep understanding of experimental design and reproducibility in scientific research. 
-You will receive a research paper in JSON format. 
+        {'role': "system", "content": f"""You are an expert researcher and strategic planner with a deep understanding of experimental design and reproducibility in scientific research. 
+You will receive a research paper in {paper_format} format. 
 Your task is to create a detailed and efficient plan to reproduce the experiments and methodologies described in the paper.
 This plan should align precisely with the paper's methodology, experimental setup, and evaluation metrics. 
 
@@ -44,7 +57,7 @@ Instructions:
 3. Prioritize Efficiency: Optimize the plan for clarity and practical implementation while ensuring fidelity to the original experiments."""},
         {"role": "user",
          "content" : f"""## Paper
-{paper_json}
+{paper_content}
 
 ## Task
 1. We want to reproduce the method described in the attached paper. 
