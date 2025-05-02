@@ -78,7 +78,10 @@ pip install vllm
 pip install -r requirements.txt
 ```
 
-### 📄 Convert PDF to JSON
+### 📄 (Option) Convert PDF to JSON
+The following process describes how to convert a paper PDF into JSON format.  
+If you have access to the LaTeX source and plan to use it with PaperCoder, you may skip this step and proceed to [🚀 Running PaperCoder](#-running-papercoder).  
+Note: In our experiments, we converted all paper PDFs to JSON format.
 
 1. Clone the `s2orc-doc2json` repository to convert your PDF file into a structured JSON format.  
    (For detailed configuration, please refer to the [official repository](https://github.com/allenai/s2orc-doc2json).)
@@ -111,19 +114,37 @@ python ./s2orc-doc2json/doc2json/grobid2json/process_pdf.py \
 #### Using OpenAI API
 - 💵 Estimated cost for using o3-mini: $0.50–$0.70
 
+
 ```bash
+# Using the PDF-based JSON format of the paper
 export OPENAI_API_KEY="<OPENAI_API_KEY>"
 
 cd scripts
 bash run.sh
 ```
 
+```bash
+# Using the LaTeX source of the paper
+export OPENAI_API_KEY="<OPENAI_API_KEY>"
+
+cd scripts
+bash run_latex.sh
+```
+
+
 #### Using Open Source Models with vLLM
 - The default model is `deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct`.
 
 ```bash
+# Using the PDF-based JSON format of the paper
 cd scripts
 bash run_llm.sh
+```
+
+```bash
+# Using the LaTeX source of the paper
+cd scripts
+bash run_latex_llm.sh
 ```
 
 ---
