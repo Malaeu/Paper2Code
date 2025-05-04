@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Review Adaptation Plan - Paper2Code{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <h2 class="h5 mb-0">
+            <i class="fas fa-file-alt me-2"></i> Review Adaptation Plan
+        </h2>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Review the plan below</strong> - This is the adaptation plan generated based on your paper and dataset.
+            If it looks good, click "Generate Code" to proceed with the full code generation.
+        </div>
+        
+        <div class="mb-4">
+            <h3 class="h5">Plan Details</h3>
+            <div class="d-flex gap-3 mb-3">
+                <div>
+                    <span class="text-muted">Session ID:</span>
+                    <span class="fw-bold">{{ session_id }}</span>
+                </div>
+                <div>
+                    <span class="text-muted">Repository:</span>
+                    <span class="fw-bold">{{ session_info.repo_name }}</span>
+                </div>
+                <div>
+                    <span class="text-muted">Status:</span>
+                    <span class="badge bg-success">{{ session_info.status }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-4">
+            <div class="card bg-light">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="h6 mb-0">Adaptation Plan</h4>
+                    <div>
+                        <button class="btn btn-sm btn-outline-secondary" id="btn-copy">
+                            <i class="fas fa-copy me-1"></i> Copy
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="markdown-content p-3" id="plan-content">
+                        {{ plan_content|safe }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <form method="POST" class="text-center">
+            <button type="submit" class="btn btn-primary btn-lg px-4 me-2">
+                <i class="fas fa-code me-2"></i> Generate Code
+            </button>
+            <a href="{{ url_for('configure', session_id=session_id) }}" class="btn btn-outline-secondary btn-lg px-4">
+                <i class="fas fa-arrow-left me-2"></i> Back to Configuration
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/json.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Convert markdown to HTML
+        const planContent = document.getElementById('plan-content');
+        planContent.innerHTML = marked.parse(planContent.textContent);
+        
+        // Highlight code blocks
+        document.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightBlock(block);
+        });
+        
+        // Copy button functionality
+        document.getElementById('btn-copy').addEventListener('click', function() {
+            const content = document.getElementById('plan-content').textContent;
+            navigator.clipboard.writeText(content).then(() => {
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-check me-1"></i> Copied!';
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                }, 2000);
+            });
+        });
+    });
+</script>
+{% endblock %}

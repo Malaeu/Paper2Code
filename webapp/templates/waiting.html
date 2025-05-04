@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Processing - Paper2Code{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <h2 class="h5 mb-0">
+            <i class="fas fa-spinner fa-spin me-2"></i> Processing
+        </h2>
+    </div>
+    <div class="card-body text-center py-5">
+        <div class="spinner-border text-primary mb-4" style="width: 3rem; height: 3rem;" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        
+        <h3 class="h4 mb-3" id="status-title">Please wait...</h3>
+        <p class="lead mb-4" id="status-message">
+            {% if status == 'analyzing' %}
+                Analyzing your dataset...
+            {% elif status == 'generating_plan' %}
+                Generating adaptation plan...
+            {% elif status == 'code_generating' %}
+                Generating code repository...
+            {% else %}
+                Processing your request...
+            {% endif %}
+        </p>
+        
+        <div class="progress mb-4" style="height: 10px;">
+            <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        
+        <p class="text-muted">
+            This may take a few minutes depending on the complexity of the paper and dataset.
+            <br>The page will automatically refresh when complete.
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const sessionId = "{{ session_id }}";
+        const progressBar = document.getElementById('progress-bar');
+        const statusTitle = document.getElementById('status-title');
+        const statusMessage = document.getElementById('status-message');
+        
+        let progress = 0;
+        let currentStatus = "{{ status }}";
+        
+        // Set initial state based on status
+        updateProgressUi(currentStatus);
+        
+        // Start polling for status updates
+        const intervalId = setInterval(checkStatus, 3000);
+        
+        // Also slowly increase progress bar for visual feedback
+        const progressIntervalId = setInterval(() => {
+            if (progress < getMaxProgressForStatus(currentStatus)) {
+                progress += 1;
+                progressBar.style.width = progress + '%';
+                progressBar.setAttribute('aria-valuenow', progress);
+            }
+        }, 1000);
+        
+        function checkStatus() {
+            fetch(`/status/${sessionId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status !== currentStatus) {
+                        currentStatus = data.status;
+                        updateProgressUi(currentStatus);
+                        
+                        // If complete or error, redirect
+                        if (['plan_generated', 'complete', 'error'].includes(currentStatus)) {
+                            clearInterval(intervalId);
+                            clearInterval(progressIntervalId);
+                            
+                            if (currentStatus === 'plan_generated') {
+                                window.location.href = `/plan/${sessionId}`;
+                            } else if (currentStatus === 'complete' || currentStatus === 'error') {
+                                window.location.href = `/result/${sessionId}`;
+                            }
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking status:', error);
+                });
+        }
+        
+        function updateProgressUi(status) {
+            // Update progress bar
+            progress = getBaseProgressForStatus(status);
+            progressBar.style.width = progress + '%';
+            progressBar.setAttribute('aria-valuenow', progress);
+            
+            // Update status message
+            switch (status) {
+                case 'uploaded':
+                    statusTitle.textContent = 'File Upload Complete';
+                    statusMessage.textContent = 'Preparing to analyze your dataset...';
+                    break;
+                case 'analyzing':
+                    statusTitle.textContent = 'Analyzing Dataset';
+                    statusMessage.textContent = 'Examining your dataset structure and content...';
+                    break;
+                case 'analyzed':
+                    statusTitle.textContent = 'Dataset Analysis Complete';
+                    statusMessage.textContent = 'Preparing configuration...';
+                    break;
+                case 'configured':
+                    statusTitle.textContent = 'Configuration Complete';
+                    statusMessage.textContent = 'Preparing to generate adaptation plan...';
+                    break;
+                case 'generating_plan':
+                    statusTitle.textContent = 'Generating Adaptation Plan';
+                    statusMessage.textContent = 'Creating a detailed plan to adapt the paper methodology...';
+                    break;
+                case 'plan_generated':
+                    statusTitle.textContent = 'Plan Generation Complete';
+                    statusMessage.textContent = 'Redirecting to review the plan...';
+                    break;
+                case 'code_generating':
+                    statusTitle.textContent = 'Generating Code';
+                    statusMessage.textContent = 'Creating a complete code repository based on the adaptation plan...';
+                    break;
+                case 'complete':
+                    statusTitle.textContent = 'Process Complete';
+                    statusMessage.textContent = 'Your adapted repository is ready!';
+                    break;
+                case 'error':
+                    statusTitle.textContent = 'Error';
+                    statusMessage.textContent = 'An error occurred during processing.';
+                    progressBar.classList.remove('bg-primary');
+                    progressBar.classList.add('bg-danger');
+                    break;
+                default:
+                    statusTitle.textContent = 'Processing';
+                    statusMessage.textContent = 'Processing your request...';
+            }
+        }
+        
+        function getBaseProgressForStatus(status) {
+            switch (status) {
+                case 'uploaded': return 5;
+                case 'analyzing': return 10;
+                case 'analyzed': return 25;
+                case 'configured': return 30;
+                case 'generating_plan': return 40;
+                case 'plan_generated': return 60;
+                case 'code_generating': return 70;
+                case 'complete': return 100;
+                case 'error': return 100;
+                default: return 0;
+            }
+        }
+        
+        function getMaxProgressForStatus(status) {
+            switch (status) {
+                case 'uploaded': return 10;
+                case 'analyzing': return 25;
+                case 'analyzed': return 30;
+                case 'configured': return 40;
+                case 'generating_plan': return 60;
+                case 'plan_generated': return 70;
+                case 'code_generating': return 95;
+                case 'complete': return 100;
+                case 'error': return 100;
+                default: return 10;
+            }
+        }
+    });
+</script>
+{% endblock %}

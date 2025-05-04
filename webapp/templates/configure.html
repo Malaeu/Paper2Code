@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block title %}Configure Adaptation - Paper2Code{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <h2 class="h5 mb-0">
+            <i class="fas fa-cogs me-2"></i> Configure Adaptation
+        </h2>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="row mb-4">
+                <div class="col-lg-6">
+                    <h3 class="h5 mb-3">Paper Information</h3>
+                    <div class="mb-3">
+                        <label for="paper_title" class="form-label">Paper Title</label>
+                        <input type="text" class="form-control" id="paper_title" name="paper_title" 
+                            placeholder="Race-Specific Models to Predict Risk..." required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="paper_authors" class="form-label">Authors</label>
+                        <input type="text" class="form-control" id="paper_authors" name="paper_authors" 
+                            placeholder="Smith et al.">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="paper_year" class="form-label">Year</label>
+                            <input type="number" class="form-control" id="paper_year" name="paper_year" 
+                                placeholder="2023" value="2023">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="paper_methodology" class="form-label">Methodology Description</label>
+                        <textarea class="form-control" id="paper_methodology" name="paper_methodology" 
+                            rows="3" placeholder="Survival analysis with machine learning..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <h3 class="h5 mb-3">Dataset Information</h3>
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <h4 class="h6">Dataset Analysis</h4>
+                            <ul class="mb-0 small">
+                                <li><strong>Format:</strong> {{ session_info.dataset_format }}</li>
+                                <li><strong>Path:</strong> {{ session_info.dataset_path }}</li>
+                                <li><strong>Columns:</strong> {{ dataset_analysis.columns|length }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="repo_name" class="form-label">Repository Name</label>
+                        <input type="text" class="form-control" id="repo_name" name="repo_name" 
+                            value="{{ session_info.repo_name }}" required>
+                    </div>
+                </div>
+            </div>
+            
+            <hr class="my-4">
+            
+            <h3 class="h5 mb-3">Variable Mapping</h3>
+            <p class="text-muted small mb-3">
+                Map variables from the original paper to equivalent variables in your dataset
+            </p>
+            
+            <div class="row mb-4">
+                <div class="col-lg-6">
+                    <div class="mb-3">
+                        <label for="map_race" class="form-label">Primary Stratification Variable (e.g., "race")</label>
+                        <input type="text" class="form-control" id="map_race" name="map_race" placeholder="gender">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="map_Black" class="form-label">Primary Category 1 (e.g., "Black")</label>
+                        <input type="text" class="form-control" id="map_Black" name="map_Black" placeholder="female">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="map_White" class="form-label">Primary Category 2 (e.g., "White")</label>
+                        <input type="text" class="form-control" id="map_White" name="map_White" placeholder="male">
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="card bg-light mb-3">
+                        <div class="card-header">
+                            <h4 class="h6 mb-0">Available Dataset Columns</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                {% for column in dataset_analysis.columns %}
+                                <div class="col-md-6 mb-2">
+                                    <div class="border rounded p-2 small bg-white">
+                                        <strong>{{ column }}</strong>
+                                        <span class="text-muted d-block">
+                                            Type: {{ dataset_analysis.dtypes[loop.index0] if dataset_analysis.dtypes else 'Unknown' }}
+                                        </span>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-lg-12">
+                    <h4 class="h6 mb-3">Additional Variable Mappings</h4>
+                    <p class="text-muted small mb-3">
+                        Map additional variables from the paper to your dataset columns
+                    </p>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 30%">Original Paper Variable</th>
+                                    <th style="width: 70%">Your Dataset Column</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mappings-container">
+                                {% for i in range(5) %}
+                                <tr>
+                                    <td>
+                                        <input type="text" class="form-control" name="map_var{{ i }}" placeholder="Original variable">
+                                    </td>
+                                    <td>
+                                        <select class="form-select" name="map_val{{ i }}">
+                                            <option value="">Select a column</option>
+                                            {% for column in dataset_analysis.columns %}
+                                            <option value="{{ column }}">{{ column }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <hr class="my-4">
+            
+            <h3 class="h5 mb-3">Methodology Settings</h3>
+            
+            <div class="row mb-4">
+                <div class="col-lg-6">
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="maintain_landmark" name="maintain_landmark" checked>
+                        <label class="form-check-label" for="maintain_landmark">
+                            Maintain Landmark Analysis
+                        </label>
+                        <div class="form-text">
+                            Preserve the landmark approach for time-dependent features
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="maintain_monte_carlo" name="maintain_monte_carlo" checked>
+                        <label class="form-check-label" for="maintain_monte_carlo">
+                            Maintain Monte Carlo Cross-Validation
+                        </label>
+                        <div class="form-text">
+                            Preserve the Monte Carlo cross-validation approach
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="iterations" class="form-label">Number of Iterations</label>
+                        <input type="number" class="form-control" id="iterations" name="iterations" value="1000">
+                        <div class="form-text">
+                            Number of iterations for Monte Carlo cross-validation
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="mb-3">
+                        <label class="form-label">Models to Include</label>
+                        <div class="form-text mb-2">
+                            Select which models to include in the adapted methodology
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" value="Cox" id="model_cox" name="models" checked>
+                                    <label class="form-check-label" for="model_cox">
+                                        Cox Proportional Hazards
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" value="RSF" id="model_rsf" name="models" checked>
+                                    <label class="form-check-label" for="model_rsf">
+                                        Random Survival Forest
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" value="oRSF" id="model_orsf" name="models" checked>
+                                    <label class="form-check-label" for="model_orsf">
+                                        Oblique Random Survival Forest
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" value="XGBoost" id="model_xgboost" name="models" checked>
+                                    <label class="form-check-label" for="model_xgboost">
+                                        XGBoost Survival
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" value="DeepSurv" id="model_deepsurv" name="models">
+                                    <label class="form-check-label" for="model_deepsurv">
+                                        DeepSurv
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" value="CoxNet" id="model_coxnet" name="models">
+                                    <label class="form-check-label" for="model_coxnet">
+                                        CoxNet (Regularized Cox)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <hr class="my-4">
+            
+            <div class="row mb-4">
+                <div class="col-lg-6">
+                    <h3 class="h5 mb-3">Output Settings</h3>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="include_tests" name="include_tests" checked>
+                        <label class="form-check-label" for="include_tests">
+                            Include Tests
+                        </label>
+                        <div class="form-text">
+                            Generate unit tests for the adapted code
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="include_documentation" name="include_documentation" checked>
+                        <label class="form-check-label" for="include_documentation">
+                            Include Documentation
+                        </label>
+                        <div class="form-text">
+                            Generate comprehensive documentation for the repository
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary btn-lg px-4">
+                    <i class="fas fa-project-diagram me-2"></i> Generate Adaptation Plan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

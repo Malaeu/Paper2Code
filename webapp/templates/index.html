@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Paper2Code - Scientific Methodology Adaptation{% endblock %}
+
+{% block content %}
+<div class="text-center mb-5">
+    <h1 class="display-4 mb-3">Paper2Code</h1>
+    <h2 class="text-muted mb-4">Scientific Methodology Adaptation</h2>
+    <p class="lead">
+        Transform methodologies from scientific papers into tailored code for your own datasets
+    </p>
+    <div class="mt-4">
+        <a href="{{ url_for('upload') }}" class="btn btn-primary btn-lg px-4 me-2">
+            <i class="fas fa-rocket me-2"></i> Start New Adaptation
+        </a>
+        <a href="https://github.com/going-doer/Paper2Code" target="_blank" class="btn btn-outline-secondary btn-lg px-4">
+            <i class="fab fa-github me-2"></i> GitHub
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 py-5">
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-file-upload fa-3x text-primary"></i>
+                </div>
+                <h3 class="card-title">Upload</h3>
+                <p class="card-text">
+                    Upload your scientific paper and dataset. We support PDF, JSON, CSV, 
+                    Parquet, Excel, and more.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-project-diagram fa-3x text-primary"></i>
+                </div>
+                <h3 class="card-title">Adapt</h3>
+                <p class="card-text">
+                    Our system analyzes the paper's methodology and adapts it to your 
+                    dataset with AI-powered variable mapping.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-code fa-3x text-primary"></i>
+                </div>
+                <h3 class="card-title">Generate</h3>
+                <p class="card-text">
+                    Download a complete code repository implementing the paper's methodology 
+                    with your own data variables.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-lg-8 mx-auto">
+        <div class="card bg-light border-0">
+            <div class="card-body p-4">
+                <h3 class="text-center mb-4">How It Works</h3>
+                <div class="d-flex mb-3">
+                    <div class="me-3">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <span>1</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h5>Upload Paper and Dataset</h5>
+                        <p>
+                            Start by uploading your scientific paper (PDF, JSON, or markdown) and 
+                            your dataset (CSV, Parquet, Excel, or JSON).
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="d-flex mb-3">
+                    <div class="me-3">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <span>2</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h5>Configure Adaptation</h5>
+                        <p>
+                            Our system analyzes your dataset and proposes variable mappings. 
+                            You can review and adjust these mappings if needed.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="d-flex mb-3">
+                    <div class="me-3">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <span>3</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h5>Review Adaptation Plan</h5>
+                        <p>
+                            We generate a detailed adaptation plan that explains how the paper's 
+                            methodology will be adapted to your dataset. You can review this plan 
+                            before proceeding.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="d-flex">
+                    <div class="me-3">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <span>4</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h5>Get Your Code</h5>
+                        <p>
+                            After approving the plan, our system generates a complete code repository 
+                            implementing the paper's methodology with your dataset's variables.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

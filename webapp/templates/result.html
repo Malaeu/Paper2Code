@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Adaptation Results - Paper2Code{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <h2 class="h5 mb-0">
+            <i class="fas fa-check-circle me-2"></i> Adaptation Results
+        </h2>
+    </div>
+    <div class="card-body">
+        {% if session_info.status == 'error' %}
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Error:</strong> An error occurred during the adaptation process.
+                <div class="mt-2">
+                    <code>{{ session_info.error }}</code>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <a href="{{ url_for('configure', session_id=session_id) }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i> Back to Configuration
+                </a>
+                <a href="{{ url_for('upload') }}" class="btn btn-primary">
+                    <i class="fas fa-redo me-2"></i> Start New Adaptation
+                </a>
+            </div>
+        {% else %}
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>Success!</strong> Your adaptation is complete. The repository has been generated successfully.
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card bg-light h-100">
+                        <div class="card-body">
+                            <h3 class="h5 mb-3">Adaptation Details</h3>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th style="width: 130px;">Repository Name</th>
+                                    <td>{{ session_info.repo_name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Session ID</th>
+                                    <td>{{ session_id }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Status</th>
+                                    <td>
+                                        <span class="badge bg-success">{{ session_info.status }}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card bg-light h-100">
+                        <div class="card-body">
+                            <h3 class="h5 mb-3">Download Repository</h3>
+                            <p>
+                                You can download the complete repository as a ZIP file. This includes
+                                all the code, documentation, and configuration files needed to run the
+                                adapted methodology.
+                            </p>
+                            <div class="text-center mt-3">
+                                <a href="{{ url_for('download', session_id=session_id) }}" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-download me-2"></i> Download Repository
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card bg-light mb-4">
+                <div class="card-header">
+                    <h3 class="h5 mb-0">Repository Structure</h3>
+                </div>
+                <div class="card-body">
+                    <pre class="mb-0"><code>{{ session_info.repo_name }}/
+├── data/              # Data loading and preprocessing
+│   └── dataset_loader.py
+├── models/            # Model implementations
+│   └── model.py
+├── utils/             # Utility functions
+│   └── helpers.py
+├── configs/           # Configuration files
+│   └── default.yaml
+├── evaluation/        # Evaluation metrics and tools
+│   └── metrics.py
+├── scripts/           # Helper scripts
+├── main.py            # Main entry point
+├── requirements.txt   # Dependencies
+└── README.md          # Documentation</code></pre>
+                </div>
+            </div>
+            
+            <div class="card bg-light mb-4">
+                <div class="card-header">
+                    <h3 class="h5 mb-0">Next Steps</h3>
+                </div>
+                <div class="card-body">
+                    <ol class="mb-0">
+                        <li class="mb-2">
+                            <strong>Download the repository</strong> using the button above.
+                        </li>
+                        <li class="mb-2">
+                            <strong>Extract the ZIP file</strong> to your local machine.
+                        </li>
+                        <li class="mb-2">
+                            <strong>Install dependencies</strong> by running:
+                            <pre><code>pip install -r requirements.txt</code></pre>
+                        </li>
+                        <li class="mb-2">
+                            <strong>Run the code</strong> with your dataset:
+                            <pre><code>python main.py --config configs/default.yaml</code></pre>
+                        </li>
+                        <li>
+                            <strong>Review the README.md file</strong> for detailed usage instructions.
+                        </li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-home me-2"></i> Return to Home
+                </a>
+                <a href="{{ url_for('upload') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i> Start New Adaptation
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
