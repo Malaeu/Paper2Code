@@ -15,7 +15,7 @@ PAPER_ENHANCED_JSON_PATH="/Users/Lordof44/Documents/GitHub/Paper2Code/custom_pap
 # User's adaptation parameters
 ADAPTED_NAME="GenderBasedModel"
 ADAPTED_PATH="/Users/Lordof44/Documents/MyData"
-ADAPTED_DATA_FILE="${ADAPTED_PATH}/mydata.csv"
+ADAPTED_DATA_FILE="${ADAPTED_PATH}/fv_export.csv"
 ADAPTED_MAPPING_FILE="${ADAPTED_PATH}/variable_mapping.json"
 OUTPUT_DIR="/Users/Lordof44/Documents/GitHub/Paper2Code/outputs/${ADAPTED_NAME}"
 OUTPUT_REPO_DIR="/Users/Lordof44/Documents/GitHub/Paper2Code/outputs/${ADAPTED_NAME}_repo"
@@ -116,13 +116,14 @@ if [ ! -f "$ADAPTED_MAPPING_FILE" ]; then
     exit 0
 fi
 
-# Ask user if they have reviewed the mapping
-read -p "Have you reviewed and edited the variable mapping file? (y/n): " reviewed
-if [ "$reviewed" != "y" ]; then
-    echo "Please review the mapping file at $ADAPTED_MAPPING_FILE before continuing."
-    echo "Run this script again after reviewing the mapping."
-    exit 0
-fi
+# Skip the review prompt for testing
+# read -p "Have you reviewed and edited the variable mapping file? (y/n): " reviewed
+# if [ "$reviewed" != "y" ]; then
+#     echo "Please review the mapping file at $ADAPTED_MAPPING_FILE before continuing."
+#     echo "Run this script again after reviewing the mapping."
+#     exit 0
+# fi
+echo "Using existing mapping file at $ADAPTED_MAPPING_FILE"
 
 echo "------- Adaptation Planning -------"
 python codes/adapt_planning.py \

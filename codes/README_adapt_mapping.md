@@ -1,84 +1,113 @@
-# Automatic Variable Mapping for Methodology Adaptation
+# Automatic Dataset Analysis and Variable Mapping
 
-The `adapt_mapping.py` module is part of Paper2Code's methodology adaptation feature. It analyzes a user's dataset and automatically generates variable mappings between the original paper's methodology and the user's dataset.
+This module provides functionality for automatically analyzing datasets and generating variable mappings for scientific methodology adaptation.
+
+## Overview
+
+The automatic mapping system analyzes input datasets and proposes intelligent variable mappings that connect the original paper's variables to equivalent variables in the dataset. This enables the adaptation of scientific methodologies to new domains while maintaining methodological rigor.
 
 ## Features
 
-- Automatic detection of dataset structure
-- Support for multiple file formats (CSV, Parquet, Excel, JSON)
-- AI-powered variable matching based on names, types, and sample values
-- Creation of comprehensive mapping files for methodology adaptation
+- **Multi-format support**: Analyze CSV, Parquet, Excel, and JSON datasets
+- **Automatic detection**: Identify column names, data types, and sample values
+- **Intelligent mapping**: Propose variable mappings based on semantic similarity
+- **Human-in-the-loop**: Generate mappings for review and customization
+- **Flexible configuration**: Support for various adaptation strategies
 
 ## Usage
 
-### Command Line
+### Basic Usage
 
-```bash
-python adapt_mapping.py \
-    --paper_name "Segar" \
-    --adapted_name "GenderBasedModel" \
-    --gpt_version "o3-2025-04-16" \
-    --pdf_json_path "/path/to/paper.json" \
-    --dataset_path "/path/to/mydata.csv" \
-    --output_mapping_path "/path/to/mapping.json" \
-    --output_dir "/path/to/output/dir"
+```python
+from codes.adapt_mapping import analyze_dataset, generate_mapping
+
+# Analyze the dataset
+dataset_analysis = analyze_dataset('/path/to/dataset.csv', 'csv')
+
+# Generate variable mapping
+variable_mapping = generate_mapping({
+    'race': 'gender',
+    'Black': 'female',
+    'White': 'male'
+}, dataset_analysis)
+
+# Save the mapping
+import json
+with open('variable_mapping.json', 'w') as f:
+    json.dump(variable_mapping, f, indent=2)
 ```
 
-### Parameters
+### Command Line Usage
 
-- `--paper_name`: Name of the original paper
-- `--adapted_name`: Name of your adaptation
-- `--gpt_version`: GPT model version to use for mapping generation
-- `--pdf_json_path`: Path to the processed JSON of the original paper
-- `--dataset_path`: Path to your dataset file
-- `--output_mapping_path`: Where to save the generated mapping
-- `--output_dir`: Directory for additional outputs
+```bash
+python -m codes.adapt_mapping --dataset_path /path/to/dataset.csv --dataset_format csv --output_path mapping.json
+```
 
-## Output
+## Integration with Two-Phase Approach
 
-The module generates a JSON mapping file with the following structure:
+The automatic mapping system integrates with the two-phase adaptation approach:
+
+1. **Phase 1 - Plan Generation**:
+   - Uses dataset description to create an adaptation plan
+   - Can incorporate automatically generated mappings
+
+2. **Phase 2 - Code Generation**:
+   - Uses the adaptation plan to generate code
+   - Applies the variable mappings consistently
+
+## API Reference
+
+### `analyze_dataset(dataset_path, dataset_format='csv')`
+
+Analyzes a dataset and returns a structured representation.
+
+**Parameters:**
+- `dataset_path`: Path to the dataset file
+- `dataset_format`: Format of the dataset ('csv', 'parquet', 'excel', 'json')
+
+**Returns:**
+- Dictionary containing dataset structure information
+
+### `generate_mapping(initial_mapping, dataset_analysis)`
+
+Generates a complete variable mapping based on initial mapping and dataset analysis.
+
+**Parameters:**
+- `initial_mapping`: Dictionary with initial variable mappings
+- `dataset_analysis`: Dataset analysis from `analyze_dataset()`
+
+**Returns:**
+- Dictionary containing complete variable mapping
+
+## Example Output
+
+A generated variable mapping might look like:
 
 ```json
 {
-    "original_to_adapted": {
-        "original_var1": "your_var1",
-        "original_var2": "your_var2",
-        "original_category1": "your_category1"
-    },
-    "adapted_dataset_path": "/path/to/your/dataset.csv",
-    "adapted_dataset_format": "csv",
-    "methodology_adjustments": {
-        "maintain_feature1": true,
-        "iterations": 1000
-    }
+  "original_to_adapted": {
+    "race": "gender",
+    "Black": "female",
+    "White": "male",
+    "natriuretic_peptide": "blood_marker_a",
+    "troponin": "blood_marker_b",
+    "JHS": "dataset_a",
+    "ARIC": "dataset_b"
+  },
+  "adapted_dataset_path": "/path/to/mydata.csv",
+  "adapted_dataset_format": "csv",
+  "methodology_adjustments": {
+    "maintain_landmark_analysis": true,
+    "maintain_monte_carlo_cv": true,
+    "iterations": 1000
+  }
 }
 ```
 
-## How It Works
+## Extending the Module
 
-1. **Dataset Analysis**: The module first analyzes your dataset to identify:
-   - Column names and types
-   - Representative sample values
-   - Basic dataset statistics
+To add support for additional dataset formats:
 
-2. **AI Mapping Generation**: Using an LLM, the module:
-   - Identifies key variables in the original paper
-   - Matches them with variables in your dataset
-   - Creates mappings for both variables and categorical values
-   - Suggests methodology adjustments
-
-3. **User Review**: After generation, you should:
-   - Review the mapping file
-   - Make any necessary adjustments
-   - Ensure all critical variables are properly mapped
-
-## Integration with Adaptation Pipeline
-
-This module is automatically called by `run_custom_adapt.sh` when no mapping file exists. After generating the mapping, the script will prompt you to review it before proceeding with the full adaptation.
-
-## Tips for Better Mappings
-
-- Use descriptive column names in your dataset
-- Include both demographic and outcome variables in your dataset
-- Ensure your dataset has similar structure to what's described in the paper
-- Review the generated mapping carefully before proceeding
+1. Update the `_read_dataset()` function in `adapt_mapping.py`
+2. Add format-specific parsing logic
+3. Update the dataset format validation in the main functions

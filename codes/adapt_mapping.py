@@ -64,7 +64,7 @@ def detect_dataset_structure(dataset_path):
     except Exception as e:
         return {"error": str(e)}
 
-def generate_mapping_template(paper_content, dataset_structure, original_name, adapted_name, gpt_version, client):
+def generate_mapping_template(paper_content, dataset_structure, original_name, adapted_name, gpt_version, client, dataset_path=None):
     """
     Generate a mapping template based on the paper content and dataset structure.
     """
@@ -76,6 +76,29 @@ Your task is to identify key variables in the original paper and suggest corresp
 Focus on creating a direct, one-to-one mapping between conceptually similar variables.
 """
     
+    # Load dataset descriptions if available
+    dataset_descriptions = []
+    
+    # Check if dataset_path is provided
+    description_paths = []
+    if dataset_path:
+        description_paths = [
+            os.path.join(os.path.dirname(dataset_path), "dataset_description.md"),
+            os.path.join(os.path.dirname(dataset_path), "dataset_description_engl.md"),
+            os.path.join(os.path.dirname(dataset_path), "variable_descriptions.md"),
+            os.path.join(os.path.dirname(dataset_path), "dataset_def.md")
+        ]
+    
+    for path in description_paths:
+        if os.path.exists(path):
+            try:
+                with open(path, 'r') as f:
+                    dataset_descriptions.append(f"From {os.path.basename(path)}:\n{f.read()}")
+            except Exception as e:
+                print(f"Warning: Could not read dataset description from {path}: {e}")
+    
+    dataset_descriptions_text = "\n\n====================\n\n".join(dataset_descriptions)
+    
     user_prompt = f"""
 ## Original Paper
 {json.dumps(paper_content, indent=2)}
@@ -86,12 +109,16 @@ Types: {dataset_structure['types']}
 Sample Values: {dataset_structure['samples']}
 Stats: {dataset_structure['stats']}
 
+## Dataset Descriptions
+{dataset_descriptions_text if dataset_descriptions else "No additional dataset descriptions provided."}
+
 ## Task
 Create a mapping between variables in the original paper and equivalent variables in the user's dataset:
 
 1. Identify the key variables/concepts in the original paper (e.g., demographic variables, outcomes, predictors)
 2. Find corresponding variables in the user's dataset based on name similarity, data type, and sample values
-3. Create a mapping in this format:
+3. Carefully use the dataset descriptions to understand the meaning of each variable in the user's dataset
+4. Create a mapping in this format:
    ```json
    {{
        "original_to_adapted": {{
@@ -108,9 +135,10 @@ Create a mapping between variables in the original paper and equivalent variable
    }}
    ```
 
-4. Include only variables that have a clear correspondence
-5. For categorical variables, include mappings between category values (e.g., "Black" → "female", "White" → "male")
-6. Include methodology adjustments that should be maintained in the adaptation
+5. Include only variables that have a clear correspondence
+6. For categorical variables, include mappings between category values (e.g., "Black" → "female", "White" → "male")
+7. For the original paper on heart failure prediction, consider mappings to liver disease progression metrics in the user's dataset
+8. Include methodology adjustments that should be maintained in the adaptation
 
 Only output the JSON mapping without any additional explanation or text.
 """
@@ -211,7 +239,7 @@ def main():
     # Generate mapping template
     print(f"Generating variable mapping from {paper_name} to {adapted_name}...")
     mapping, completion_json, trajectories = generate_mapping_template(
-        paper_content, dataset_structure, paper_name, adapted_name, gpt_version, client
+        paper_content, dataset_structure, paper_name, adapted_name, gpt_version, client, dataset_path
     )
     
     # Update mapping with dataset path

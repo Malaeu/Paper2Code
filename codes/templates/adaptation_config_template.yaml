@@ -1,0 +1,49 @@
+# Adaptation Configuration
+
+# Original Paper Information
+paper:
+  title: "{PAPER_TITLE}"
+  authors: "{PAPER_AUTHORS}"
+  year: {PAPER_YEAR}
+  methodology: "{PAPER_METHODOLOGY}"
+
+# Dataset Configuration
+dataset:
+  path: "{DATASET_PATH}"
+  format: "{DATASET_FORMAT}"  # csv, parquet, excel, json
+  description_path: "{DATASET_DESCRIPTION_PATH}"  # optional path to markdown description file
+
+# Variable Mapping
+variable_mapping:
+  original_to_adapted:
+    # Primary stratification variable
+    "{ORIGINAL_PRIMARY_VAR}": "{ADAPTED_PRIMARY_VAR}"
+    # Primary categories
+    "{ORIGINAL_CATEGORY_1}": "{ADAPTED_CATEGORY_1}"
+    "{ORIGINAL_CATEGORY_2}": "{ADAPTED_CATEGORY_2}"
+    # Other variables as needed
+    "{ORIGINAL_VAR_1}": "{ADAPTED_VAR_1}"
+    "{ORIGINAL_VAR_2}": "{ADAPTED_VAR_2}"
+
+# Methodology Adjustments
+methodology:
+  maintain_landmark_analysis: {MAINTAIN_LANDMARK}
+  maintain_monte_carlo_cv: {MAINTAIN_MONTE_CARLO}
+  iterations: {NUMBER_OF_ITERATIONS}
+  models_to_include:
+    - "{MODEL_1}"
+    - "{MODEL_2}"
+    - "{MODEL_3}"
+
+# Output Configuration
+output:
+  repo_name: "{OUTPUT_REPO_NAME}"
+  output_dir: "{OUTPUT_DIR}"
+  include_tests: {INCLUDE_TESTS}
+  include_documentation: {INCLUDE_DOCUMENTATION}
+
+# Advanced Settings
+advanced:
+  use_direct_api: {USE_DIRECT_API}
+  adaptation_plan_path: "{ADAPTATION_PLAN_PATH}"  # Path to pre-generated adaptation plan
+  custom_prompt_path: "{CUSTOM_PROMPT_PATH}"  # Optional path to custom prompt file

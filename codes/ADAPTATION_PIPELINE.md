@@ -1,171 +1,182 @@
-# Paper2Code Methodology Adaptation Pipeline
+# Paper2Code Adaptation Pipeline
 
-This document provides an overview of the methodology adaptation pipeline in Paper2Code, which allows users to adapt research methodologies from scientific papers to their own datasets and contexts.
+This document provides a comprehensive explanation of the Paper2Code adaptation pipeline, which enables users to adapt scientific methodologies from papers to their own datasets.
 
-## Complete Pipeline Overview
+## Overview
 
-The adaptation pipeline consists of the following steps:
+The adaptation pipeline consists of two main approaches:
 
-1. **Dataset Preparation**
-   - User provides their own dataset or uses the sample dataset
-   - Multiple formats supported: CSV, Parquet, Excel, JSON
+1. **Standard Approach**: Analyzes dataset files directly and generates variable mappings
+2. **Two-Phase Approach**: Separates adaptation into plan generation and code generation phases
 
-2. **Automatic Variable Mapping**
-   - Intelligent analysis of dataset structure
-   - AI-powered matching of paper variables to user variables
-   - Generation of complete mapping template
-   - User review and customization
+Both approaches maintain methodological rigor while adapting to new datasets and variables.
 
-3. **Adaptation Planning**
-   - High-level plan for adapting the paper methodology
-   - Focus on maintaining methodological rigor
-   - Creation of detailed adaptation roadmap
+## Standard Approach
 
-4. **Component Analysis**
-   - Detailed analysis of each code component
-   - Identification of necessary changes per component
-   - Pseudocode generation for adapted implementations
+The standard approach works in a single pass:
 
-5. **Code Generation**
-   - Generation of complete, adapted code repository
-   - Structured according to the original methodology
-   - Tailored to work with user's dataset and variables
+1. **Dataset Analysis**: Examines the dataset to detect its structure
+2. **Variable Mapping**: Proposes mappings between paper variables and dataset variables
+3. **Adaptation Planning**: Creates a plan for adapting the methodology
+4. **Code Generation**: Generates a complete repository with adapted code
 
-## Pipeline Components
-
-### 1. Dataset Analysis and Mapping (`adapt_mapping.py`)
-
-This module analyzes the user's dataset and generates a variable mapping between the original paper and the user's data:
+### Workflow
 
 ```
-Input: Original paper JSON + User dataset
-Output: Variable mapping JSON file
+Dataset File → Dataset Analysis → Variable Mapping → Adaptation Planning → Code Generation → Adapted Repository
 ```
 
-Key features:
-- Automatic detection of dataset structure
-- AI-powered variable matching
-- User-reviewable mapping template
-
-### 2. Adaptation Planning (`adapt_planning.py`)
-
-This module creates a comprehensive adaptation plan:
-
-```
-Input: Original paper JSON + Variable mapping
-Output: Adaptation plan (markdown)
-```
-
-Key features:
-- Methodological adaptation guidelines
-- Data processing approach
-- Model development strategy
-- Evaluation framework
-
-### 3. Component Analysis (`adapt_analyzing.py`) 
-
-This module analyzes each component of the original methodology:
-
-```
-Input: Original paper JSON + Variable mapping + Adaptation plan
-Output: Component-specific adaptation analyses
-```
-
-Key features:
-- Component-by-component analysis
-- Variable substitution planning
-- Structural adjustment identification
-- Pseudocode generation
-
-### 4. Code Generation (`adapt_coding.py`)
-
-This module generates the adapted code for each component:
-
-```
-Input: Original paper JSON + Variable mapping + Adaptation plan + Component analyses
-Output: Complete adapted code repository
-```
-
-Key features:
-- Working code generation
-- Proper variable substitution
-- Methodologically rigorous implementation
-- Ready-to-run repository
-
-## Running the Pipeline
-
-The entire pipeline can be executed with a single command:
+### Usage
 
 ```bash
 ./scripts/run_custom_adapt.sh
 ```
 
-This script:
-1. Creates a sample dataset if none exists
-2. Analyzes the dataset and generates a mapping template
-3. Prompts the user to review the mapping
-4. Runs the complete adaptation pipeline
-5. Generates a ready-to-use code repository
+## Two-Phase Approach
 
-## Technical Implementation
+The two-phase approach separates the process into:
 
-- **LLM Integration**: Uses o3-2025-04-16 for all adaptation steps
-- **Pandas Integration**: For dataset analysis and structure detection
-- **Human-in-the-Loop**: User reviews and customizes the variable mapping
-- **Modular Design**: Each step can be run independently
-- **File Format Support**: Works with multiple data formats
+1. **Phase 1: Plan Generation**
+   - Dataset Description → Adaptation Plan (JSON/Markdown)
+   
+2. **Phase 2: Code Generation**
+   - Adaptation Plan → Detailed Analysis → Code Generation
 
-## Usage Examples
+This approach allows for human review and editing of the adaptation plan before code generation, providing more control over the adaptation process.
 
-### From Race-Based to Gender-Based Models
+### Workflow
 
-```json
-{
-    "original_to_adapted": {
-        "race": "gender",
-        "Black": "female",
-        "White": "male"
-    }
-}
+```
+Phase 1: Dataset Description → LLM → Adaptation Plan (JSON/Markdown)
+          ↓
+          Human Review/Edit
+          ↓
+Phase 2: Adaptation Plan → Detailed Analysis → Code Generation → Adapted Repository
 ```
 
-### From Binary to Multi-Class Classification
+### Configuration
 
-```json
-{
-    "original_to_adapted": {
-        "outcome_binary": "outcome_multiclass",
-        "positive": "class_a",
-        "negative": ["class_b", "class_c"]
-    }
-}
+The two-phase approach uses a YAML configuration file:
+
+```yaml
+paper:
+  title: "Paper Title"
+  methodology: "Methodology Description"
+
+dataset:
+  path: "path/to/dataset.csv"
+  format: "csv"
+  description_path: "path/to/description.md"  # Optional
+
+variable_mapping:
+  original_to_adapted:
+    "race": "gender"
+    "Black": "female"
+    "White": "male"
+
+methodology:
+  maintain_landmark_analysis: true
+  maintain_monte_carlo_cv: true
+  iterations: 1000
+
+output:
+  repo_name: "AdaptedModel"
+  output_dir: "outputs"
 ```
 
-### From One Medical Context to Another
+### Usage
 
-```json
-{
-    "original_to_adapted": {
-        "heart_failure": "diabetes",
-        "ejection_fraction": "HbA1c",
-        "hypertension": "hypertension"
-    }
-}
+**Phase 1: Generate Adaptation Plan**
+
+```bash
+./scripts/run_direct_adapt.sh --config custom_adapt/adapt_config.yaml
 ```
 
-## Best Practices
+This generates an adaptation plan (JSON and Markdown) that can be reviewed and edited.
 
-1. **Dataset Preparation**:
-   - Use descriptive column names
-   - Include all relevant variables mentioned in the paper
-   - Clean data before adaptation
+**Phase 2: Generate Code Using Plan**
 
-2. **Mapping Review**:
-   - Carefully review the generated mapping
-   - Ensure all critical variables are properly mapped
-   - Add any missing mappings manually
+```bash
+./scripts/run_with_plan.sh --config custom_adapt/adapt_config.yaml
+```
 
-3. **Code Customization**:
-   - The generated code is a starting point
-   - You may need to make minor adjustments
-   - Test the adapted code with your data
+This uses the previously generated plan to create a detailed analysis and generate code.
+
+## Components
+
+### 1. Dataset Analysis (`adapt_mapping.py`)
+
+- Detects dataset format (CSV, Parquet, Excel, JSON)
+- Analyzes column names, data types, and values
+- Provides a structured representation of the dataset
+
+### 2. Variable Mapping (`adapt_mapping.py`)
+
+- Maps original paper variables to dataset variables
+- Uses AI to propose intelligent mappings
+- Generates a JSON mapping file
+
+### 3. Direct Adaptation (`direct_adapt.py`)
+
+- Sends dataset descriptions directly to the API
+- Generates adaptation plans without raw file parsing
+- Supports standalone operation for plan generation
+
+### 4. Planning with Analysis (`adapt_planning.py`)
+
+- Creates detailed adaptation plans
+- Identifies core methodological elements to preserve
+- Specifies required adjustments for the new dataset
+
+### 5. Analysis with Plan (`adapt_analyzing_with_plan.py`)
+
+- Takes a pre-generated plan as input
+- Performs detailed analysis for implementation
+- Creates structured analysis documents
+
+### 6. Code Generation (`adapt_coding.py`)
+
+- Generates complete repository structure
+- Creates well-documented, modular code
+- Implements the adapted methodology with new variables
+
+## Directory Structure
+
+The generated repository follows a standardized structure:
+
+```
+AdaptedModel_repo/
+  ├── data/               # Data loading and preprocessing
+  │   └── dataset_loader.py
+  ├── models/             # Model implementations
+  │   └── model.py
+  ├── utils/              # Utility functions
+  │   └── helpers.py
+  ├── configs/            # Configuration files
+  │   └── default.yaml
+  ├── evaluation/         # Evaluation metrics and tools
+  │   └── metrics.py
+  ├── scripts/            # Helper scripts
+  ├── main.py             # Main entry point
+  ├── requirements.txt    # Dependencies
+  └── README.md           # Documentation
+```
+
+## Methodological Considerations
+
+Both approaches maintain key methodological elements:
+
+- **Monte Carlo Cross-Validation**: Preserves rigorous validation
+- **Landmark Analysis**: Maintains time-dependent feature handling
+- **Model Selection**: Preserves the same model types
+- **Evaluation Metrics**: Maintains statistical evaluation approaches
+
+## Future Enhancements
+
+Planned enhancements to the adaptation pipeline:
+
+1. **Web Interface**: For plan editing and review
+2. **Plan Library**: Pre-generated plans for common scenarios
+3. **Interactive Mode**: Step-by-step adaptation guidance
+4. **Multi-paper Integration**: Combine methodologies from multiple papers
+5. **Automatic Testing**: Generate tests for adapted code
