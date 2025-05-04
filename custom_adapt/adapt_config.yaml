@@ -1,0 +1,62 @@
+# Adaptation Configuration
+
+# Original Paper Information
+paper:
+  title: "Race-Specific Models to Predict Risk of Heart Failure in the General Population"
+  authors: "Segar et al."
+  year: 2023
+  methodology: "Survival analysis with machine learning and race-specific models"
+  json_path: "examples/Segar_cleaned.json"  # Path to paper JSON file
+
+# Dataset Configuration
+dataset:
+  path: "custom_adapt/medical_dataset.csv"
+  format: "csv"  # csv, parquet, excel, json
+  description_path: "custom_adapt/dataset_description.md"  # optional path to markdown description file
+
+# Variable Mapping
+variable_mapping:
+  original_to_adapted:
+    # Primary stratification variable
+    "race": "gender"
+    # Primary categories
+    "Black": "female"
+    "White": "male"
+    # Other variables as needed
+    "age": "age"
+    "smoking": "smoking_status"
+    "diabetes": "diabetes"
+    "hypertension": "hypertension"
+    "BMI": "bmi"
+    "SBP": "systolic_bp"
+    "heart_rate": "heart_rate"
+    "natriuretic_peptide": "blood_marker_a"
+    "troponin": "blood_marker_b"
+    "JHS": "dataset_a"
+    "ARIC": "dataset_b"
+
+# Methodology Adjustments
+methodology:
+  maintain_landmark_analysis: true
+  maintain_monte_carlo_cv: true
+  iterations: 1000
+  models_to_include:
+    - "Cox"
+    - "RSF"
+    - "oRSF"
+    - "XGBoost"
+    - "DeepSurv"
+    - "CoxNet"
+
+# Output Configuration
+output:
+  repo_name: "GenderBasedModel"
+  output_dir: "outputs"
+  include_tests: true
+  include_documentation: true
+
+# Advanced Settings
+advanced:
+  use_direct_api: true
+  adaptation_plan_path: ""  # Will be filled automatically
+  custom_prompt_path: ""  # Optional path to custom prompt file
