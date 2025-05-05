@@ -1,0 +1,1 @@
+from . import routes as auth_routes

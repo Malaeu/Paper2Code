@@ -1,0 +1,18 @@
+VERIFY YOUR EMAIL ADDRESS - PAPER2CODE
+
+Hello {{ user.username }},
+
+Thank you for registering with Paper2Code! Please verify your email address by clicking the link below:
+
+{{ verification_url }}
+
+This verification link will expire in 24 hours.
+
+If you did not register for a Paper2Code account, please disregard this email.
+
+Best regards,
+The Paper2Code Team
+
+---
+This is an automated message. Please do not reply to this email.
+© 2025 Paper2Code. All rights reserved.

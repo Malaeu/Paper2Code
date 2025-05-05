@@ -1,0 +1,136 @@
+{% extends "dashboard/layout.html" %}
+
+{% block title %}Data Directory Settings{% endblock %}
+
+{% block page_title %}Data Directory Settings{% endblock %}
+{% block page_subtitle %}Configure the directories used for storing papers and outputs{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Current Directory Configurations</h3>
+          <div class="card-tools">
+            <a href="{{ url_for('dashboard.create_directory') }}" class="btn btn-primary btn-sm">
+              <i class="fas fa-plus"></i> Add New Directory
+            </a>
+          </div>
+        </div>
+        <div class="card-body table-responsive p-0">
+          <table class="table table-hover text-nowrap">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Path</th>
+                <th>Description</th>
+                <th>Default</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for directory in directories %}
+              <tr>
+                <td>{{ directory.name }}</td>
+                <td><code>{{ directory.path }}</code></td>
+                <td>{{ directory.description }}</td>
+                <td>
+                  {% if directory.is_default %}
+                  <span class="badge badge-success">Default</span>
+                  {% else %}
+                  <a href="{{ url_for('dashboard.set_default_directory', directory_id=directory.id) }}" 
+                     class="btn btn-outline-primary btn-xs">
+                    Set as Default
+                  </a>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if directory.exists %}
+                  <span class="badge badge-success">Exists</span>
+                  {% else %}
+                  <span class="badge badge-danger">Does Not Exist</span>
+                  {% endif %}
+
+                  {% if directory.writable %}
+                  <span class="badge badge-success">Writable</span>
+                  {% else %}
+                  <span class="badge badge-warning">Not Writable</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="btn-group">
+                    <a href="{{ url_for('dashboard.edit_directory', directory_id=directory.id) }}" 
+                       class="btn btn-info btn-xs">
+                      <i class="fas fa-edit"></i> Edit
+                    </a>
+                    <a href="{{ url_for('dashboard.delete_directory', directory_id=directory.id) }}"
+                       class="btn btn-danger btn-xs" 
+                       onclick="return confirm('Are you sure you want to delete this directory configuration?');">
+                      <i class="fas fa-trash"></i> Delete
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Directory Usage</h3>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            {% for directory in directories %}
+            <div class="col-md-6">
+              <div class="info-box">
+                <span class="info-box-icon bg-info"><i class="far fa-folder-open"></i></span>
+                <div class="info-box-content">
+                  <span class="info-box-text">{{ directory.name }}</span>
+                  <span class="info-box-number">{{ directory.usage_info.file_count }} files</span>
+                  <div class="progress">
+                    <div class="progress-bar" style="width: {{ directory.usage_info.usage_percent }}%"></div>
+                  </div>
+                  <span class="progress-description">
+                    {{ directory.usage_info.used_space }} used ({{ directory.usage_info.usage_percent }}% of available space)
+                  </span>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Directory Help</h3>
+        </div>
+        <div class="card-body">
+          <p>Directory configurations are used by Paper2Code to store various files:</p>
+          <ul>
+            <li><strong>Uploads:</strong> Temporary storage for uploaded papers</li>
+            <li><strong>Papers:</strong> Location where processed papers are stored</li>
+            <li><strong>Data:</strong> Location for datasets and other data files</li>
+            <li><strong>Outputs:</strong> Directory where generated code and outputs are stored</li>
+          </ul>
+          
+          <p><strong>Note:</strong> Make sure that directory paths exist and have proper permissions.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

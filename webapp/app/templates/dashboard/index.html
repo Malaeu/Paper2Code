@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Paper2Code{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Dashboard Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Dashboard</h1>
+        <a href="{{ url_for('dashboard.create_project') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i> New Project
+        </a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h3 class="display-4">{{ stats.total_projects }}</h3>
+                    <p class="card-text text-muted">Total Projects</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h3 class="display-4">{{ stats.papers_processed }}</h3>
+                    <p class="card-text text-muted">Papers Processed</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h3 class="display-4">{{ stats.code_repositories }}</h3>
+                    <p class="card-text text-muted">Code Repositories</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h3 class="display-4">{{ stats.api_calls }}</h3>
+                    <p class="card-text text-muted">API Calls</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Projects Section -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">My Projects</h5>
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="projectFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    Filter
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="projectFilterDropdown">
+                    <li><a class="dropdown-item" href="#">All Projects</a></li>
+                    <li><a class="dropdown-item" href="#">Recent</a></li>
+                    <li><a class="dropdown-item" href="#">In Progress</a></li>
+                    <li><a class="dropdown-item" href="#">Completed</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if projects %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Paper</th>
+                                <th>Created</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for project in projects %}
+                                <tr>
+                                    <td>{{ project.name }}</td>
+                                    <td>{{ project.paper_title or project.get_paper_filename() }}</td>
+                                    <td>{{ project.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ project.get_status_color() }}">{{ project.status.value }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('dashboard.view_project', project_id=project.id) }}" class="btn btn-outline-primary">View</a>
+                                            <a href="#" class="btn btn-outline-secondary">Edit</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-folder-plus display-4 text-muted"></i>
+                    <h5 class="mt-3">No projects yet</h5>
+                    <p class="text-muted">Start by creating a new project to process a scientific paper</p>
+                    <a href="{{ url_for('dashboard.create_project') }}" class="btn btn-primary mt-2">
+                        <i class="bi bi-plus-circle me-2"></i> Create New Project
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Recent Activity</h5>
+        </div>
+        <div class="list-group list-group-flush">
+            <div class="list-group-item text-center py-5">
+                <i class="bi bi-activity display-4 text-muted"></i>
+                <h5 class="mt-3">No recent activity</h5>
+                <p class="text-muted">Your recent activities will appear here</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

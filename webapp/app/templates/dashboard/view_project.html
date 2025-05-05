@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.name }} - Paper2Code{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Project Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2">{{ project.name }}</h1>
+            <p class="text-muted">
+                <span class="badge bg-{{ project.get_status_color() }} me-2">{{ project.status.value|title }}</span>
+                <span>{{ project.project_type.display_name }}</span>
+                <span class="mx-2">•</span>
+                <span>Created {{ project.created_at.strftime('%B %d, %Y') }}</span>
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            {% if project.status == 'completed' and project.repository_url %}
+                <a href="{{ project.repository_url }}" class="btn btn-success" target="_blank">
+                    <i class="bi bi-github me-2"></i> View Repository
+                </a>
+            {% endif %}
+            <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <!-- Left Column - Project Details -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Project Details</h5>
+                </div>
+                <div class="card-body">
+                    {% if project.description %}
+                        <div class="mb-4">
+                            <h6>Description</h6>
+                            <p>{{ project.description }}</p>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6>Project Type</h6>
+                            <p>{{ project.project_type.display_name }}</p>
+                            
+                            <h6>Programming Language</h6>
+                            <p>{{ project.programming_language|default('Not specified')|title }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Creation Date</h6>
+                            <p>{{ project.created_at.strftime('%B %d, %Y at %H:%M') }}</p>
+                            
+                            <h6>Last Updated</h6>
+                            <p>{{ project.updated_at.strftime('%B %d, %Y at %H:%M') }}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Paper Details -->
+                    <div class="mb-4">
+                        <h6>Paper Information</h6>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-file-earmark-pdf fs-3 me-3 text-danger"></i>
+                                    <div>
+                                        <h6 class="mb-0">{{ project.paper_title or project.get_paper_filename() or 'Paper file' }}</h6>
+                                        {% if project.get_paper_size() %}
+                                            <small class="text-muted">{{ project.get_paper_size() }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                {% if project.paper_authors %}
+                                    <div class="mb-2">
+                                        <strong>Authors:</strong> {{ project.paper_authors }}
+                                    </div>
+                                {% endif %}
+                                
+                                {% if project.paper_abstract %}
+                                    <div class="mb-2">
+                                        <strong>Abstract:</strong>
+                                        <p class="small">{{ project.paper_abstract }}</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Output Section -->
+                    {% if project.status == 'completed' %}
+                        <div class="mb-4">
+                            <h6>Output</h6>
+                            <div class="card">
+                                <div class="card-body">
+                                    {% if project.repository_url %}
+                                        <div class="d-flex align-items-center mb-3">
+                                            <i class="bi bi-github fs-3 me-3"></i>
+                                            <div>
+                                                <h6 class="mb-0">GitHub Repository</h6>
+                                                <a href="{{ project.repository_url }}" target="_blank">{{ project.repository_url }}</a>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    {% if project.output_path %}
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-folder fs-3 me-3"></i>
+                                            <div>
+                                                <h6 class="mb-0">Generated Code</h6>
+                                                <p class="mb-0">
+                                                    <a href="#" class="btn btn-sm btn-outline-primary mt-2">
+                                                        <i class="bi bi-download me-2"></i> Download Code
+                                                    </a>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Logs and Errors -->
+            {% if project.error_message %}
+                <div class="card mb-4 border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">Error</h5>
+                    </div>
+                    <div class="card-body">
+                        <pre class="text-danger">{{ project.error_message }}</pre>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Right Column - Status and Actions -->
+        <div class="col-md-4">
+            <!-- Status Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <div class="progress mb-3" style="height: 20px;">
+                            <div class="progress-bar bg-{{ project.get_status_color() }}" role="progressbar" 
+                                style="width: {{ project.progress }}%;" 
+                                aria-valuenow="{{ project.progress }}" aria-valuemin="0" aria-valuemax="100">
+                                {{ project.progress }}%
+                            </div>
+                        </div>
+                        <h5>{{ project.status.value|title }}</h5>
+                        {% if project.current_task %}
+                            <p class="text-muted">{{ project.current_task }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    {% if project.status.value == 'created' %}
+                        <div class="d-grid">
+                            <form action="{{ url_for('dashboard.process_project', project_id=project.id) }}" method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-primary btn-block">
+                                    <i class="bi bi-play-fill me-2"></i> Start Processing
+                                </button>
+                            </form>
+                        </div>
+                    {% elif project.status.value == 'failed' or project.status.value == 'cancelled' %}
+                        <div class="d-grid">
+                            <form action="{{ url_for('dashboard.retry_project', project_id=project.id) }}" method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-warning btn-block">
+                                    <i class="bi bi-arrow-repeat me-2"></i> Retry Processing
+                                </button>
+                            </form>
+                        </div>
+                    {% elif project.status.value in ['processing', 'planning', 'analyzing', 'coding'] %}
+                        <div class="d-grid">
+                            <form action="{{ url_for('dashboard.cancel_project', project_id=project.id) }}" method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-danger btn-block">
+                                    <i class="bi bi-stop-fill me-2"></i> Cancel
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Actions Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Actions</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <i class="bi bi-pencil me-2"></i> Edit Project
+                    </a>
+                    
+                    {% if project.status.value == 'completed' %}
+                    <form action="{{ url_for('dashboard.retry_project', project_id=project.id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="list-group-item list-group-item-action w-100 text-start">
+                            <i class="bi bi-arrow-repeat me-2"></i> Run Again
+                        </button>
+                    </form>
+                    {% endif %}
+                    
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <i class="bi bi-files me-2"></i> Duplicate Project
+                    </a>
+                    
+                    <button type="button" class="list-group-item list-group-item-action text-danger" data-bs-toggle="modal" data-bs-target="#deleteProjectModal">
+                        <i class="bi bi-trash me-2"></i> Delete Project
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Project Modal -->
+<div class="modal fade" id="deleteProjectModal" tabindex="-1" aria-labelledby="deleteProjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteProjectModalLabel">Delete Project</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong>{{ project.name }}</strong>?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a href="#" class="btn btn-danger">Delete Project</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Only run the polling if the project is in a processing state
+    {% if project.status.value in ['processing', 'planning', 'analyzing', 'coding'] %}
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elements to update
+            const progressBar = document.querySelector('.progress-bar');
+            const statusBadge = document.querySelector('.badge.bg-{{ project.get_status_color() }}');
+            const statusText = document.querySelector('h5');
+            const currentTask = document.querySelector('.text-muted');
+            
+            // Start polling for status updates
+            const pollInterval = setInterval(pollProjectStatus, 5000); // Poll every 5 seconds
+            
+            function pollProjectStatus() {
+                fetch('{{ url_for("api.get_project_status", project_id=project.id) }}')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            const projectData = data.data;
+                            
+                            // Update progress bar
+                            progressBar.style.width = projectData.progress + '%';
+                            progressBar.setAttribute('aria-valuenow', projectData.progress);
+                            progressBar.textContent = projectData.progress + '%';
+                            
+                            // Update status badge
+                            statusBadge.textContent = projectData.status.charAt(0).toUpperCase() + projectData.status.slice(1);
+                            statusBadge.className = 'badge bg-' + projectData.status_color + ' me-2';
+                            
+                            // Update status text
+                            if (statusText) {
+                                statusText.textContent = projectData.status.charAt(0).toUpperCase() + projectData.status.slice(1);
+                            }
+                            
+                            // Update current task
+                            if (currentTask && projectData.current_task) {
+                                currentTask.textContent = projectData.current_task;
+                            }
+                            
+                            // Check if processing has completed or failed
+                            if (['completed', 'failed', 'cancelled'].includes(projectData.status)) {
+                                clearInterval(pollInterval);
+                                // Reload the page to show the updated UI
+                                window.location.reload();
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error polling project status:', error);
+                    });
+            }
+        });
+    {% endif %}
+</script>
+{% endblock %}

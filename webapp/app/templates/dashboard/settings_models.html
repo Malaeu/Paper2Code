@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block title %}AI Model Settings - Paper2Code{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">AI Model Settings</h1>
+        <div>
+            <a href="{{ url_for('dashboard.settings') }}" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-arrow-left"></i> Back to Settings
+            </a>
+            <a href="{{ url_for('dashboard.create_model') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i> Add New Model
+            </a>
+        </div>
+    </div>
+
+    <!-- Models Overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Available Models</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="modelFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            Filter
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="modelFilterDropdown">
+                            <li><a class="dropdown-item" href="#">All Models</a></li>
+                            <li><a class="dropdown-item" href="#">OpenAI</a></li>
+                            <li><a class="dropdown-item" href="#">Anthropic</a></li>
+                            <li><a class="dropdown-item" href="#">Local Models</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Model Name</th>
+                                    <th>Provider</th>
+                                    <th>Context</th>
+                                    <th>Input Cost</th>
+                                    <th>Output Cost</th>
+                                    <th>Default</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for model in models %}
+                                <tr {% if not model.is_active %}class="table-secondary"{% endif %}>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if model.provider == 'openai' %}
+                                                <i class="bi bi-robot me-2 text-success"></i>
+                                            {% elif model.provider == 'anthropic' %}
+                                                <i class="bi bi-bezier me-2 text-primary"></i>
+                                            {% elif model.provider == 'local' %}
+                                                <i class="bi bi-cpu me-2 text-warning"></i>
+                                            {% elif model.provider == 'deepseek' %}
+                                                <i class="bi bi-code-square me-2 text-info"></i>
+                                            {% elif model.provider == 'huggingface' %}
+                                                <i class="bi bi-stack me-2 text-danger"></i>
+                                            {% else %}
+                                                <i class="bi bi-gear me-2"></i>
+                                            {% endif %}
+                                            <div>
+                                                <span class="fw-bold">{{ model.display_name }}</span>
+                                                {% if not model.is_active %}<span class="badge bg-secondary ms-2">Inactive</span>{% endif %}
+                                                <div class="small text-muted">{{ model.model_id }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ model.provider_display }}</td>
+                                    <td>{{ '{:,}'.format(model.context_length) }}</td>
+                                    <td>${{ model.input_cost_per_1k_tokens|default(0.0)|float }}/1K</td>
+                                    <td>${{ model.output_cost_per_1k_tokens|default(0.0)|float }}/1K</td>
+                                    <td>
+                                        {% if model.is_default %}
+                                            <span class="badge bg-success">Default</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('dashboard.edit_model', model_id=model.id) }}" class="btn btn-outline-primary">Edit</a>
+                                            {% if model.is_default %}
+                                                <button type="button" class="btn btn-outline-secondary" disabled>Default</button>
+                                            {% else %}
+                                                <form action="{{ url_for('dashboard.set_default_model') }}" method="POST" class="d-inline">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <input type="hidden" name="model_id" value="{{ model.id }}">
+                                                    <button type="submit" class="btn btn-outline-success">Set Default</button>
+                                                </form>
+                                            {% endif %}
+                                            {% if model.is_active %}
+                                                <form action="{{ url_for('dashboard.toggle_model_status') }}" method="POST" class="d-inline">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <input type="hidden" name="model_id" value="{{ model.id }}">
+                                                    <input type="hidden" name="action" value="deactivate">
+                                                    <button type="submit" class="btn btn-outline-danger">Deactivate</button>
+                                                </form>
+                                            {% else %}
+                                                <form action="{{ url_for('dashboard.toggle_model_status') }}" method="POST" class="d-inline">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <input type="hidden" name="model_id" value="{{ model.id }}">
+                                                    <input type="hidden" name="action" value="activate">
+                                                    <button type="submit" class="btn btn-outline-success">Activate</button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Provider API Keys -->
+    <div class="card shadow mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Provider API Keys</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                <!-- OpenAI -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <span class="icon-stack icon-stack-sm me-2 text-success">
+                                    <i class="bi bi-robot"></i>
+                                </span>
+                                OpenAI
+                            </h5>
+                            <p class="card-text small">Provider of GPT-4o, GPT-4, GPT-3.5-Turbo and other models.</p>
+                            <form action="{{ url_for('dashboard.save_api_key') }}" method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="provider" value="openai">
+                                <div class="input-group mb-3">
+                                    <input type="password" class="form-control" name="api_key" placeholder="Enter API Key"
+                                           value="{{ api_keys.get('openai', '') }}" required>
+                                    <button class="btn btn-primary" type="submit">Save</button>
+                                </div>
+                                <div class="form-text small">Find your API key at <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI API Keys</a></div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Anthropic -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <span class="icon-stack icon-stack-sm me-2 text-primary">
+                                    <i class="bi bi-bezier"></i>
+                                </span>
+                                Anthropic
+                            </h5>
+                            <p class="card-text small">Provider of Claude models with strong reasoning capabilities.</p>
+                            <form action="{{ url_for('dashboard.save_api_key') }}" method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="provider" value="anthropic">
+                                <div class="input-group mb-3">
+                                    <input type="password" class="form-control" name="api_key" placeholder="Enter API Key"
+                                           value="{{ api_keys.get('anthropic', '') }}" required>
+                                    <button class="btn btn-primary" type="submit">Save</button>
+                                </div>
+                                <div class="form-text small">Find your API key at <a href="https://console.anthropic.com/keys" target="_blank">Anthropic Console</a></div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Hugging Face -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <span class="icon-stack icon-stack-sm me-2 text-danger">
+                                    <i class="bi bi-stack"></i>
+                                </span>
+                                Hugging Face
+                            </h5>
+                            <p class="card-text small">Access to various open-source models via Hugging Face API.</p>
+                            <form action="{{ url_for('dashboard.save_api_key') }}" method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="provider" value="huggingface">
+                                <div class="input-group mb-3">
+                                    <input type="password" class="form-control" name="api_key" placeholder="Enter API Key"
+                                           value="{{ api_keys.get('huggingface', '') }}" required>
+                                    <button class="btn btn-primary" type="submit">Save</button>
+                                </div>
+                                <div class="form-text small">Find your API key at <a href="https://huggingface.co/settings/tokens" target="_blank">Hugging Face Tokens</a></div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Usage Statistics -->
+    <div class="card shadow">
+        <div class="card-header">
+            <h5 class="mb-0">Usage Statistics</h5>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h1 class="display-4">${{ total_cost|default(0)|round(2) }}</h1>
+                            <p class="card-text">Total Cost</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h1 class="display-4">{{ '{:,}'.format(total_tokens|default(0)|int) }}</h1>
+                            <p class="card-text">Total Tokens Used</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h1 class="display-4">{{ '{:,}'.format(total_api_calls|default(0)|int) }}</h1>
+                            <p class="card-text">Total API Calls</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% if models %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Tokens Used</th>
+                            <th>Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for model in models %}
+                        {% if model.total_tokens_used and model.total_tokens_used > 0 %}
+                        <tr>
+                            <td>{{ model.display_name }}</td>
+                            <td>{{ '{:,}'.format(model.total_tokens_used|int) }}</td>
+                            <td>${{ model.total_cost|default(0)|round(2) }}</td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center text-muted py-4">
+                <p>No usage data available yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

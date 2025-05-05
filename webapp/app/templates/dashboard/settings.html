@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Settings - Paper2Code{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Settings Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Dashboard Settings</h1>
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Settings Categories -->
+    <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+        <!-- AI Models -->
+        <div class="col">
+            <div class="card h-100 hover-shadow">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-primary bg-opacity-10 p-3 rounded-3 me-3">
+                            <i class="bi bi-robot fs-3 text-primary"></i>
+                        </div>
+                        <h5 class="card-title mb-0">AI Models</h5>
+                    </div>
+                    <p class="card-text">Configure models for code generation, adjust parameters, and manage API keys.</p>
+                    <a href="{{ url_for('dashboard.settings_models') }}" class="btn btn-primary mt-2">Manage Models</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Data Directories -->
+        <div class="col">
+            <div class="card h-100 hover-shadow">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-success bg-opacity-10 p-3 rounded-3 me-3">
+                            <i class="bi bi-folder fs-3 text-success"></i>
+                        </div>
+                        <h5 class="card-title mb-0">Data Directories</h5>
+                    </div>
+                    <p class="card-text">Set up directories for papers, datasets, and output files for better organization.</p>
+                    <a href="{{ url_for('dashboard.settings_directories') }}" class="btn btn-success mt-2">Configure Directories</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- User Profile -->
+        <div class="col">
+            <div class="card h-100 hover-shadow">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-info bg-opacity-10 p-3 rounded-3 me-3">
+                            <i class="bi bi-person-circle fs-3 text-info"></i>
+                        </div>
+                        <h5 class="card-title mb-0">User Profile</h5>
+                    </div>
+                    <p class="card-text">Update your personal information, change password, and manage account settings.</p>
+                    <a href="{{ url_for('auth.profile') }}" class="btn btn-info mt-2">Edit Profile</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Appearance -->
+        <div class="col">
+            <div class="card h-100 hover-shadow">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-warning bg-opacity-10 p-3 rounded-3 me-3">
+                            <i class="bi bi-palette fs-3 text-warning"></i>
+                        </div>
+                        <h5 class="card-title mb-0">Appearance</h5>
+                    </div>
+                    <p class="card-text">Customize the dashboard appearance, theme, and display preferences.</p>
+                    <a href="#" class="btn btn-warning mt-2">Customize</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notifications -->
+        <div class="col">
+            <div class="card h-100 hover-shadow">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-danger bg-opacity-10 p-3 rounded-3 me-3">
+                            <i class="bi bi-bell fs-3 text-danger"></i>
+                        </div>
+                        <h5 class="card-title mb-0">Notifications</h5>
+                    </div>
+                    <p class="card-text">Manage notification preferences for project completions and system alerts.</p>
+                    <a href="#" class="btn btn-danger mt-2">Configure</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Advanced Settings -->
+        <div class="col">
+            <div class="card h-100 hover-shadow">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-secondary bg-opacity-10 p-3 rounded-3 me-3">
+                            <i class="bi bi-gear fs-3 text-secondary"></i>
+                        </div>
+                        <h5 class="card-title mb-0">Advanced</h5>
+                    </div>
+                    <p class="card-text">Configure advanced settings, debug options, and system preferences.</p>
+                    <a href="#" class="btn btn-secondary mt-2">Advanced Settings</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Settings -->
+    <div class="card shadow mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Quick Settings</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3 form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="darkModeToggle">
+                        <label class="form-check-label" for="darkModeToggle">Dark Mode</label>
+                    </div>
+                    
+                    <div class="mb-3 form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
+                        <label class="form-check-label" for="emailNotifications">Email Notifications</label>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3 form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="autoSave" checked>
+                        <label class="form-check-label" for="autoSave">Auto-Save Projects</label>
+                    </div>
+                    
+                    <div class="mb-3 form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="showTips" checked>
+                        <label class="form-check-label" for="showTips">Show Tips & Hints</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    .hover-shadow {
+        transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
+    }
+    .hover-shadow:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        transform: translateY(-5px);
+    }
+</style>
+{% endblock %}
