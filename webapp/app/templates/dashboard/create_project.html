@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}New Project - Paper2Code{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Create New Project</h1>
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data">
+                {{ form.csrf_token }}
+                
+                <div class="mb-3">
+                    {{ form.name.label(class="form-label") }}
+                    {{ form.name(class="form-control") }}
+                    <div class="form-text">Choose a descriptive name for your project.</div>
+                </div>
+                
+                <div class="mb-3">
+                    {{ form.description.label(class="form-label") }}
+                    {{ form.description(class="form-control", rows=3) }}
+                    <div class="form-text">Optional: Add a description to help remember what this project is about.</div>
+                </div>
+                
+                <div class="mb-3">
+                    {{ form.project_type.label(class="form-label") }}
+                    {{ form.project_type(class="form-select") }}
+                    <div class="form-text">
+                        <strong>Code Generation:</strong> Generate code implementation from a scientific paper<br>
+                        <strong>Methodology Adaptation:</strong> Adapt a published methodology to your dataset<br>
+                        <strong>Dataset Analysis:</strong> Analyze datasets based on methods in the paper
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    {{ form.paper.label(class="form-label") }}
+                    {{ form.paper(class="form-control") }}
+                    <div class="form-text">Upload the scientific paper in PDF format. Maximum file size: 50MB.</div>
+                </div>
+                
+                <div class="mb-3">
+                    {{ form.programming_language.label(class="form-label") }}
+                    {{ form.programming_language(class="form-select") }}
+                    <div class="form-text">Select your preferred programming language for the generated code.</div>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

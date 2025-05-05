@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit' if model else 'Add' }} AI Model - Paper2Code{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">{{ 'Edit Model' if model else 'Add New Model' }}</h1>
+        <a href="{{ url_for('dashboard.settings_models') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i> Back to Model Settings
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">Model Configuration</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.csrf_token }}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <h5>Basic Information</h5>
+                                
+                                <div class="mb-3">
+                                    {{ form.model_id.label(class="form-label") }}
+                                    {{ form.model_id(class="form-control") }}
+                                    <div class="form-text">The unique identifier for this model, e.g., "gpt-4o" or "claude-3-opus"</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form.display_name.label(class="form-label") }}
+                                    {{ form.display_name(class="form-control") }}
+                                    <div class="form-text">The human-readable name that will be displayed in the UI</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form.provider.label(class="form-label") }}
+                                    {{ form.provider(class="form-select") }}
+                                    <div class="form-text">The provider of this model</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form.description.label(class="form-label") }}
+                                    {{ form.description(class="form-control", rows=3) }}
+                                    <div class="form-text">Brief description of the model's capabilities</div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h5>Technical Details</h5>
+                                
+                                <div class="mb-3">
+                                    {{ form.context_length.label(class="form-label") }}
+                                    {{ form.context_length(class="form-control") }}
+                                    <div class="form-text">Maximum context length in tokens (e.g., 8192, 16384, 100000)</div>
+                                </div>
+                                
+                                <div class="mb-3 form-check">
+                                    {{ form.supports_vision(class="form-check-input") }}
+                                    {{ form.supports_vision.label(class="form-check-label") }}
+                                    <div class="form-text">Check if the model can process and understand images</div>
+                                </div>
+                                
+                                <div class="mb-3 form-check">
+                                    {{ form.supports_function_calling(class="form-check-input") }}
+                                    {{ form.supports_function_calling.label(class="form-check-label") }}
+                                    <div class="form-text">Check if the model supports function/tool calling capabilities</div>
+                                </div>
+                                
+                                <div class="mb-3 form-check">
+                                    {{ form.requires_api_key(class="form-check-input") }}
+                                    {{ form.requires_api_key.label(class="form-check-label") }}
+                                    <div class="form-text">Check if an API key is required to use this model</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <h5>Implementation</h5>
+                                
+                                <div class="mb-3">
+                                    {{ form.gpt_version.label(class="form-label") }}
+                                    {{ form.gpt_version(class="form-control") }}
+                                    <div class="form-text">For OpenAI models only (e.g., 'o4-mini', 'o35-turbo')</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form.command_args.label(class="form-label") }}
+                                    {{ form.command_args(class="form-control") }}
+                                    <div class="form-text">Command line arguments for local models (e.g., --model_name "model-name" --tp_size 2)</div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h5>Cost Information</h5>
+                                
+                                <div class="mb-3">
+                                    {{ form.input_cost_per_1k_tokens.label(class="form-label") }}
+                                    {{ form.input_cost_per_1k_tokens(class="form-control", placeholder="0.0") }}
+                                    <div class="form-text">Cost in USD per 1,000 input tokens (e.g., 0.01)</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form.output_cost_per_1k_tokens.label(class="form-label") }}
+                                    {{ form.output_cost_per_1k_tokens(class="form-control", placeholder="0.0") }}
+                                    <div class="form-text">Cost in USD per 1,000 output tokens (e.g., 0.03)</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <h5>Status</h5>
+                                
+                                <div class="mb-3 form-check">
+                                    {{ form.is_active(class="form-check-input") }}
+                                    {{ form.is_active.label(class="form-check-label") }}
+                                    <div class="form-text">Uncheck to temporarily disable this model</div>
+                                </div>
+                                
+                                <div class="mb-3 form-check">
+                                    {{ form.is_default(class="form-check-input") }}
+                                    {{ form.is_default.label(class="form-check-label") }}
+                                    <div class="form-text">Check to set as the default model for new projects</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('dashboard.settings_models') }}" class="btn btn-outline-secondary">Cancel</a>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show/hide fields based on selected provider
+        const providerSelect = document.getElementById('provider');
+        const gptVersionField = document.getElementById('gpt_version').closest('.mb-3');
+        const commandArgsField = document.getElementById('command_args').closest('.mb-3');
+        const requiresApiKeyCheck = document.getElementById('requires_api_key');
+        
+        function updateFields() {
+            // Hide all provider-specific fields first
+            gptVersionField.style.display = 'none';
+            commandArgsField.style.display = 'none';
+            
+            // Show fields based on provider
+            if (providerSelect.value === 'openai') {
+                gptVersionField.style.display = 'block';
+                requiresApiKeyCheck.checked = true;
+            } else if (['local', 'huggingface'].includes(providerSelect.value)) {
+                commandArgsField.style.display = 'block';
+                if (providerSelect.value === 'local') {
+                    requiresApiKeyCheck.checked = false;
+                }
+            }
+        }
+        
+        // Update fields on load and change
+        updateFields();
+        providerSelect.addEventListener('change', updateFields);
+    });
+</script>
+{% endblock %}

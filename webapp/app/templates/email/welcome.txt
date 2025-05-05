@@ -1,0 +1,29 @@
+WELCOME TO PAPER2CODE!
+
+Hello {{ user.username }},
+
+Thank you for joining Paper2Code! Your account has been successfully verified and activated. We're excited to have you on board.
+
+To access your dashboard, visit: http://localhost:5000/dashboard
+
+GETTING STARTED
+
+Paper2Code allows you to transform scientific papers into executable code repositories. Here are some key features to explore:
+
+PDF PROCESSING
+Upload scientific papers in PDF format and extract their content, including text, equations, and figures.
+
+CODE GENERATION
+Automatically generate implementation code from paper descriptions using state-of-the-art AI models.
+
+METHODOLOGY ADAPTATION
+Adapt published methodologies to your custom datasets and specific use cases.
+
+If you have any questions or need assistance, please don't hesitate to contact our support team.
+
+Best regards,
+The Paper2Code Team
+
+---
+This is an automated message. Please do not reply to this email.
+© 2025 Paper2Code. All rights reserved.

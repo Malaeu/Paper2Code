@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Email - Paper2Code</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #007bff;
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="logo">
+        <h1>Paper2Code</h1>
+    </div>
+    
+    <h2>Verify Your Email Address</h2>
+    
+    <p>Hello {{ user.username }},</p>
+    
+    <p>Thank you for registering with Paper2Code! Please verify your email address by clicking the button below:</p>
+    
+    <p>
+        <a href="{{ verification_url }}" class="button">Verify Email Address</a>
+    </p>
+    
+    <p>If the button doesn't work, copy and paste this link into your browser:</p>
+    <p><a href="{{ verification_url }}">{{ verification_url }}</a></p>
+    
+    <p>This verification link will expire in 24 hours.</p>
+    
+    <p>If you did not register for a Paper2Code account, please disregard this email.</p>
+    
+    <p>Best regards,<br>The Paper2Code Team</p>
+    
+    <div class="footer">
+        <p>This is an automated message. Please do not reply to this email.</p>
+        <p>&copy; 2025 Paper2Code. All rights reserved.</p>
+    </div>
+</body>
+</html>
