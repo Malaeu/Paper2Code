@@ -53,7 +53,7 @@ outputs
 │   ├── analyzing_artifacts
 │   ├── coding_artifacts
 │   └── planning_artifacts
-└── Transformer_repo  # Final output repository
+└── Transformer_repo # Final output repository
 ```
 ---
 
