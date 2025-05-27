@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+# LLM Routing configuration for task dispatcher
+
+# Map agent types to execution paths, in priority order
+routing:
+  vision:
+    - "process:claude-cli?model=sonnet"       # First try Claude CLI with Sonnet (latest)
+    - "openai:o4-mini"                        # Fallback to OpenAI API with o4-mini
+  
+  lit_review:
+    - "process:claude-cli?model=sonnet"       # First try Claude CLI with Sonnet (latest)
+    - "openai:o4-mini"                        # Fallback to OpenAI API with o4-mini
+  
+  chat:
+    - "process:claude-cli?model=sonnet"       # First try Claude CLI with Sonnet (latest)
+    - "openai:o4-mini"                        # Fallback to OpenAI API with o4-mini
+  
+  code_patch:
+    - "process:claude-cli?model=opus"         # First try Claude CLI with Opus (latest)
+    - "openai:o4-mini"                        # Fallback to OpenAI API with o4-mini
+  
+  code_auto:
+    - "process:claude-cli?model=opus"         # First try Claude CLI with Opus (latest)
+    - "openai:o4-mini"                        # Fallback to OpenAI API with o4-mini
+  
+  # Cheap mode for cost control
+  code_patch_cheap:
+    - "process:codex-cli?model=o3"            # Cheap fallback using O3
+  
+  code_auto_cheap:
+    - "process:codex-cli?model=o3"            # Cheap fallback using O3
+
+# Error policy - when to try next route
+error_policy:
+  max_retries: 3               # Try the current route up to 3 times before moving to next
+  error_patterns:              # Errors that trigger immediate route change
+    - "rate_limit_exceeded"
+    - "waiting_for_slot.*exceeds timeout"
+    - "token delay 10 ms"
+    - "Connection refused"
+    - "Network error"
+  
+  error_codes:                 # Exit codes that trigger immediate route change
+    - 124  # timeout command exit code
+    - 137  # SIGKILL (likely OOM)
+    - 143  # SIGTERM
+
+# Resource constraints
+resources:
+  codex-cli:
+    max_parallel: 6            # Maximum parallel codex-cli processes
+    rate_limit: 20             # Requests per minute limit
+  
+  claude-cli: 
+    max_parallel: 10           # Maximum parallel claude-cli processes (Sonnet 4)
+    rate_limit: 30             # Requests per minute limit
+  
+  claude-code-cli:
+    max_parallel: 4            # Maximum parallel claude-code-cli processes (Opus 4 - more resource intensive)
+    rate_limit: 15             # Requests per minute limit (more conservative for Opus 4)
+  
+  openai:
+    rate_limit: 50             # Requests per minute limit for OpenAI API

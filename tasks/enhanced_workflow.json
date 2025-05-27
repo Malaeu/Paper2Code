@@ -1,0 +1,93 @@
+[
+  {
+    "id": "lit_alert",
+    "agent": "lit_review",
+    "prompt": "Query academic search APIs for \"Transformer architecture\" papers (max_results=10). Save results to lit/lit_cache.bib",
+    "priority": "high",
+    "parallel_ok": false
+  },
+  {
+    "id": "select_papers",
+    "agent": "chat",
+    "description": "Select the top 3 most relevant papers on Transformer architecture from lit/lit_cache.bib",
+    "priority": "normal",
+    "depends": ["lit_alert"],
+    "parallel_ok": false
+  },
+  {
+    "id": "page2png",
+    "agent": "vision",
+    "description": "Convert each selected paper PDF to 400 DPI JPEG images using llm-pdf-to-images. Save to pages/{paper_id}/page_###.jpg",
+    "priority": "high",
+    "depends": ["select_papers"],
+    "parallel_ok": false,
+    "files": ["/Users/Malaeu/Downloads/Paper2Code/examples/Transformer.pdf"]
+  },
+  {
+    "id": "vision_annot",
+    "agent": "vision",
+    "description": "For each image, detect if it contains a table/figure/none, extract chart type, font family, and color palette. Use vision_annotator.py to generate vision.json",
+    "priority": "normal",
+    "depends": ["page2png"],
+    "parallel_ok": false,
+    "prompt": "Use the vision_annotator.py script to analyze each image and extract information.\n\n```bash\npython /Users/Malaeu/Downloads/Paper2Code/scripts/vision_annotator.py {files} > /Users/Malaeu/Downloads/Paper2Code/outputs/Transformer/vision.json\n```\n\nIf any page is blank, it should be marked with \"BLANK_PAGE\".",
+    "files": []
+  },
+  {
+    "id": "figure_coder",
+    "agent": "code_patch",
+    "description": "Generate reproducible matplotlib/seaborn code for each figure identified in vision.json",
+    "priority": "normal",
+    "depends": ["vision_annot"],
+    "parallel_ok": true,
+    "prompt": "Based on the figure information in /Users/Malaeu/Downloads/Paper2Code/outputs/Transformer/vision.json, generate matplotlib/seaborn code to reproduce each figure.\n\nSave each figure's code as /Users/Malaeu/Downloads/Paper2Code/outputs/Transformer/snippets/fig_{figure_id}.py\n\nMake sure the code is fully runnable with standard libraries and produces a visual result similar to what's described in the vision.json file."
+  },
+  {
+    "id": "semantic_linker",
+    "agent": "chat",
+    "description": "Parse the paper text to identify passages that reference figures and tables",
+    "priority": "normal",
+    "depends": ["figure_coder"],
+    "parallel_ok": false,
+    "prompt": "Analyze the text of the Transformer paper to find passages that reference figures and tables. Create a passages.json file with the following structure:\n\n```json\n{\n  \"passages\": [\n    {\n      \"id\": \"passage_1\",\n      \"text\": \"As shown in Figure 1, the Transformer architecture consists of...\",\n      \"references\": [\"fig_1\"]\n    },\n    ...\n  ]\n}\n```\n\nSave the file to /Users/Malaeu/Downloads/Paper2Code/outputs/Transformer/passages.json"
+  },
+  {
+    "id": "json_merger",
+    "agent": "code_patch",
+    "description": "Merge vision.json, code snippets, and passages.json into paper2data format",
+    "priority": "high",
+    "depends": ["semantic_linker"],
+    "parallel_ok": false,
+    "prompt": "Run the json_merger.py script to combine the vision annotations, code snippets, and semantic links into a unified enriched.json file in paper2data format:\n\n```bash\npython /Users/Malaeu/Downloads/Paper2Code/scripts/json_merger.py \\\n  --vision /Users/Malaeu/Downloads/Paper2Code/outputs/Transformer/vision.json \\\n  --passages /Users/Malaeu/Downloads/Paper2Code/outputs/Transformer/passages.json \\\n  --snippets /Users/Malaeu/Downloads/Paper2Code/outputs/Transformer/snippets \\\n  --plan /Users/Malaeu/Downloads/Paper2Code/outputs/Transformer/plan.json \\\n  --output /Users/Malaeu/Downloads/Paper2Code/outputs/Transformer/enriched.json\n```\n\nThis will create an enriched.json file with the following structure:\n- pages[]: Information about each page\n- figures[]: Details about figures with code snippets\n- tables[]: Details about tables\n- passages[]: Text passages with references to figures/tables"
+  },
+  {
+    "id": "paper2code",
+    "agent": "code_auto",
+    "description": "Run Paper2Code on the PDF with enriched data to generate a repository",
+    "priority": "high",
+    "depends": ["json_merger"],
+    "parallel_ok": false,
+    "timeout": 3600,
+    "prompt": "Using the enriched.json file created in the previous step, run the Paper2Code pipeline on the Transformer paper to generate a fully functional code repository.\n\nUpdate the Paper2Code command to include the enriched data:\n\n```bash\ncd /Users/Malaeu/Downloads/Paper2Code/scripts\nbash run.sh --enriched ../outputs/Transformer/enriched.json\n```\n\nThe generated repository should include implementations of the Transformer architecture as described in the paper, with visualizations based on the generated code snippets."
+  },
+  {
+    "id": "fix_tests",
+    "agent": "code_patch",
+    "description": "Fix any failing tests in the generated repository",
+    "priority": "normal",
+    "depends": ["paper2code"],
+    "parallel_ok": true,
+    "timeout": 1200,
+    "prompt": "Identify and fix any failing tests in the Paper2Code generated repository. Keep the API unchanged.\n\n1. Navigate to the generated repository\n2. Run the tests to identify failures\n3. Fix each failing test\n4. Verify all tests pass after your changes\n5. Submit a detailed report of the issues found and fixes applied"
+  },
+  {
+    "id": "exec_verify",
+    "agent": "code_patch",
+    "description": "Run tests in a sandbox environment and generate metrics",
+    "priority": "normal",
+    "depends": ["fix_tests"],
+    "parallel_ok": false,
+    "timeout": 900,
+    "prompt": "Run the tests for the Transformer implementation in a sandboxed environment and generate performance metrics:\n\n1. Create a sandboxed environment using a virtual environment\n2. Install all required dependencies\n3. Run the full test suite\n4. Generate metrics including:\n   - Test pass rate\n   - Code coverage\n   - Execution time\n   - Memory usage\n5. Save the metrics to /Users/Malaeu/Downloads/Paper2Code/outputs/Transformer/metrics.json"
+  }
+]

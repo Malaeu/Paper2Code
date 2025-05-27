@@ -1,0 +1,45 @@
+[
+  {
+    "id": "task_001",
+    "agent": "vision",
+    "description": "Analyze the Transformer.pdf file and extract key concepts and architecture details.",
+    "priority": "high",
+    "parallel_ok": false,
+    "files": ["/Users/Malaeu/Downloads/Paper2Code/examples/Transformer.pdf"]
+  },
+  {
+    "id": "task_002",
+    "agent": "lit_review",
+    "description": "Review the Transformer architecture and compare with recent advancements in attention mechanisms.",
+    "priority": "normal",
+    "depends": ["task_001"],
+    "parallel_ok": true
+  },
+  {
+    "id": "task_003",
+    "agent": "chat",
+    "description": "Create a summary of the Transformer architecture based on the vision analysis and literature review.",
+    "priority": "normal",
+    "depends": ["task_001", "task_002"],
+    "parallel_ok": true
+  },
+  {
+    "id": "task_004",
+    "agent": "code_patch",
+    "description": "Implement the multi-head attention mechanism described in the Transformer paper.",
+    "priority": "high",
+    "depends": ["task_003"],
+    "files": ["attention.py", "model.py"],
+    "parallel_ok": false
+  },
+  {
+    "id": "task_005",
+    "agent": "code_auto",
+    "description": "Generate automated tests for the Transformer implementation.",
+    "priority": "low",
+    "depends": ["task_004"],
+    "files": ["test_transformer.py"],
+    "parallel_ok": true,
+    "timeout": 300
+  }
+]

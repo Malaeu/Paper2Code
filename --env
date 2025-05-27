@@ -1,0 +1,1 @@
+Added stdio MCP server taskmaster-ai with command: npx -y --package=task-master-ai task-master-ai > to local config
