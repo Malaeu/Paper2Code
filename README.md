@@ -273,3 +273,24 @@ python eval.py \
 🪙 Accumulated total cost so far: $0.16451380
 ============================================
 ```
+
+## 💵 Official AI Model API Pricing (May 2025)
+
+The following prices were collected from official documentation in May 2025. All values are shown per **million tokens**.
+
+### OpenAI Models
+- **o4-mini-2025-04-16**: Input `$1.10`, Output `$4.40` – fast, cost‑efficient reasoning with multimodal support.
+- **gpt-4.1-2025-04-14**: Input `$2.00`, Output `$8.00` – improved coding and instruction following with a 1M token context window.
+- **o3-2025-04-16**: Input `$10.00` (cached input `$2.50`), Output `$40.00` – OpenAI's most powerful reasoning model with a 200K token context window.
+
+### Google Gemini Models
+- **Gemini 2.5 Flash (preview)**:
+  - Input: Text/Image/Video `$0.15`, Audio `$1.00`
+  - Output: Non-thinking mode `$0.60`, Thinking mode `$3.50`
+  - First Flash model with thinking capabilities (preview).
+- **Gemini 2.5 Pro (preview)**:
+  - Input ≤ 200k tokens `$1.25`, > 200k tokens `$2.50`
+  - Output ≤ 200k tokens `$10.00`, > 200k tokens `$15.00`
+  - Most advanced Gemini reasoning model with a 1M token context window.
+
+Prices may change as these models move from preview to general availability. Consult the respective provider pages for the latest information.
