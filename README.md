@@ -16,6 +16,7 @@ Our method outperforms strong baselines on both Paper2Code and PaperBench and pr
 - [📚 Detailed Setup Instructions](#-detailed-setup-instructions)
 - [📦 Paper2Code Benchmark Datasets](#-paper2code-benchmark-datasets)
 - [📊 Model-based Evaluation of Repositories](#-model-based-evaluation-of-repositories-generated-by-papercoder)
+- [🔀 LLM Router](#-llm-router)
 
 ---
 
@@ -272,6 +273,22 @@ python eval.py \
 💵 Current total cost: $0.16451380
 🪙 Accumulated total cost so far: $0.16451380
 ============================================
+```
+
+## 🔀 LLM Router
+The router configuration lives in [`llm_router/config.yaml`](./llm_router/config.yaml).
+
+| Task Pattern | Primary Model | Fallback |
+|--------------|--------------|---------|
+| `chat\|faq\|rag` | `gemini_flash_25` | `claude_sonnet_35` |
+| `code\|unit_tests` | `claude_sonnet_37` | `o4mini` |
+| `long_doc>300k` | `gpt41` | `claude_sonnet_35` |
+| `tool_reasoning` | `o4mini` | `gemini_flash_25` |
+
+Override the config by setting `LLM_CFG`:
+
+```bash
+export LLM_CFG=/path/to/custom.yaml
 ```
 
 ## 💵 Official AI Model API Pricing (May 2025)
