@@ -1,0 +1,50 @@
+defaults:
+  max_retry: 3
+  timeout_sec: 60          # fail-fast
+
+models:
+  gemini_flash_25:
+    provider: google
+    price_per_mtok: 0.75
+    speed_tps: 380
+    context: 1_000_000
+    strengths: [realtime, multimodal, thinking]
+  claude_sonnet_35:
+    provider: anthropic
+    price_per_mtok: 18
+    speed_tps: 120
+    context: 200_000
+    strengths: [stable_reasoning, artifacts]
+  claude_sonnet_37:
+    provider: anthropic
+    price_per_mtok: 18
+    speed_tps: 110
+    context: 200_000
+    strengths: [coding, tests]
+  o4mini:
+    provider: openai
+    price_per_mtok: 5.50
+    speed_tps: 156
+    context: 200_000
+    strengths: [tool_calls, structured_reasoning]
+  gpt41:
+    provider: openai
+    price_per_mtok: 10       # 2 in + 8 out
+    speed_tps: 100
+    context: 1_000_000
+    strengths: [long_context]
+
+routing_rules:
+  chat|faq|rag:
+    primary: gemini_flash_25
+    fallback: claude_sonnet_35
+  code|unit_tests:
+    primary: claude_sonnet_37
+    fallback: o4mini
+  long_doc>300k:
+    primary: gpt41
+    fallback: claude_sonnet_35
+  tool_reasoning:
+    primary: o4mini
+    fallback: gemini_flash_25
+
