@@ -1,4 +1,6 @@
-openai>=1.65.4
+openai>=1,<2
+anthropic>=1,<2
+google-generativeai>=0.5,<0.6
 vllm>=0.6.4.post1
 transformers>=4.46.3
 tiktoken>=0.9.0
@@ -7,3 +9,4 @@ camelot-py>=0.11
 pdf2image>=1.16.3
 PyMuPDF>=1.23.7
 pytesseract>=0.3.10
+PyYAML>=6.0
