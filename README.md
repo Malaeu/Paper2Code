@@ -129,6 +129,25 @@ python codes/pdf_to_json_hybrid.py \
 This hybrid pipeline leverages modern layout analysis tools for accurate page content
 while still using `grobid` for reliable metadata extraction.
 
+#### Simple approach (no `grobid`)
+
+1. Install lightweight dependencies.
+
+```bash
+pip install PyMuPDF pdf2image pytesseract camelot-py
+```
+
+2. Run the script [`codes/pdf_to_json_simple.py`](./codes/pdf_to_json_simple.py):
+
+```bash
+python codes/pdf_to_json_simple.py \
+    --pdf_path ${PDF_PATH} \
+    --output_json ./paper_coder_output/paper.json
+```
+
+This method relies solely on PyMuPDF and OCR, optionally using `camelot` to
+extract tables.
+
 ### 🚀 Running PaperCoder
 - Note: The following command runs example paper ([Attention Is All You Need](https://arxiv.org/abs/1706.03762)).  
   If you want to run PaperCoder on your own paper, please modify the environment variables accordingly.
