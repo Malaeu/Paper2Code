@@ -79,25 +79,24 @@ pip install -r requirements.txt
 ```
 
 ### 📄 (Option) Convert PDF to JSON
-The following process describes how to convert a paper PDF into JSON format.  
-If you have access to the LaTeX source and plan to use it with PaperCoder, you may skip this step and proceed to [🚀 Running PaperCoder](#-running-papercoder).  
-Note: In our experiments, we converted all paper PDFs to JSON format.
+The following process describes how to convert a paper PDF into JSON format.
+If you have access to the LaTeX source and plan to use it with PaperCoder, you may skip this step and proceed to [🚀 Running PaperCoder](#-running-papercoder).
 
-1. Clone the `s2orc-doc2json` repository to convert your PDF file into a structured JSON format.  
-   (For detailed configuration, please refer to the [official repository](https://github.com/allenai/s2orc-doc2json).)
+Note: In our experiments, we converted all paper PDFs to JSON format. The original workflow relied on the
+[`s2orc-doc2json`](https://github.com/allenai/s2orc-doc2json) repository. As of 2025 more capable open-source
+libraries exist. We provide two approaches below.
+
+#### Legacy approach (compatible with older instructions)
+
+1. Clone `s2orc-doc2json` and run its processing service:
 
 ```bash
 git clone https://github.com/allenai/s2orc-doc2json.git
-```
-
-2. Run the PDF processing service.
-
-```bash
 cd ./s2orc-doc2json/grobid-0.7.3
 ./gradlew run
 ```
 
-3. Convert your PDF into JSON format.
+2. Convert the PDF into JSON format using the bundled script:
 
 ```bash
 mkdir -p ./s2orc-doc2json/output_dir/paper_coder
@@ -106,6 +105,33 @@ python ./s2orc-doc2json/doc2json/grobid2json/process_pdf.py \
     -t ./s2orc-doc2json/temp_dir/ \
     -o ./s2orc-doc2json/output_dir/paper_coder
 ```
+
+#### Hybrid approach (recommended for 2025)
+
+1. Install modern PDF processing libraries.
+
+```bash
+pip install PyMuPDF pdfplumber layoutparser
+```
+
+2. Ensure the latest `grobid` server (v0.8 or later) is running.
+
+3. Optionally install additional parsers such as `marker-pdf`, `nougat-ocr`, or
+   `docling` for specialized extraction of structure, formulas, and tables.
+
+4. Use the script [`codes/pdf_to_json_hybrid.py`](./codes/pdf_to_json_hybrid.py) to combine
+page-level text extraction with metadata from `grobid` and produce a single JSON file.
+The script runs tasks asynchronously and reports progress using `tqdm`:
+
+```bash
+python codes/pdf_to_json_hybrid.py \
+    --pdf_path ${PDF_PATH} \
+    --output_json ./paper_coder_output/paper.json \
+    --grobid_url http://localhost:8070
+```
+
+This hybrid pipeline leverages modern layout analysis tools for accurate page content
+while still using `grobid` for reliable metadata extraction.
 
 ### 🚀 Running PaperCoder
 - Note: The following command runs example paper ([Attention Is All You Need](https://arxiv.org/abs/1706.03762)).  
