@@ -47,4 +47,3 @@ routing_rules:
   tool_reasoning:
     primary: o4mini
     fallback: gemini_flash_25
-

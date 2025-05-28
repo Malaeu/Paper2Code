@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@context7/mcp-server-context7"
+      ]
+    },
+    "taskmaster-ai": {
+      "command": "/usr/local/bin/npx",
+      "args": [
+        "-y",
+        "--package=task-master-ai",
+        "task-master-ai"
+      ],
+      "env": {
+        "PATH": "/usr/local/bin:/usr/bin:/bin",
+        "ANTHROPIC_API_KEY": "your-key-here",
+        "PERPLEXITY_API_KEY": "your-key-here"
+      }
+    }
+  }
+}

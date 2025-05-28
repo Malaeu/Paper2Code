@@ -1,0 +1,160 @@
+models:
+  # Claude family
+  - name: "Claude 3.5 Sonnet"
+    quality: 0.92  # 92% on HumanEval, top performer
+    speed: 0.85    # 170.4 tokens/s 
+    stability: 0.98
+    cost_penalty: 0.10
+    
+  - name: "Claude 3.5 Haiku"
+    quality: 0.75
+    speed: 0.99
+    stability: 0.97
+    cost_penalty: 0.02
+    
+  - name: "Claude 3 Opus"
+    quality: 0.88  # 77.35% benchmark average
+    speed: 0.75
+    stability: 0.92
+    cost_penalty: 0.90
+    
+  - name: "Claude 4 Opus"
+    quality: 0.94
+    speed: 0.88
+    stability: 0.95
+    cost_penalty: 0.95
+    
+  - name: "Claude 4 Sonnet"
+    quality: 0.92
+    speed: 0.93
+    stability: 0.97
+    cost_penalty: 0.15
+
+  # Google family  
+  - name: "Gemini 2.0 Flash"
+    quality: 0.85
+    speed: 0.99  # 380 tokens/s
+    stability: 0.97
+    cost_penalty: 0.05
+    
+  - name: "Gemini 2.5 Flash"
+    quality: 0.85
+    speed: 0.99  # 380 tokens/s
+    stability: 0.97
+    cost_penalty: 0.0075  # Base: $0.15 input / $0.60 output per 1M
+    context_window: 1048576  # Exact: 1,048,576 input tokens, 65,536 output
+    multimodal_support:
+      text:
+        input_cost: 0.15  # per 1M tokens
+        output_cost: 0.60
+      audio:
+        input_cost: 1.00  # per 1M tokens (25 tokens/second)
+        tokens_per_second: 25
+      image:
+        tokens_per_1024x1024: 1290  # scales with resolution
+      video:
+        tokens_per_second: 258  # at 1fps
+    thinking_capabilities:
+      enabled: true
+      max_budget: 24576  # tokens
+      output_cost_with_thinking: 3.50  # per 1M tokens (5.8x premium)
+    
+  - name: "Gemini 1.5 Pro"
+    quality: 0.87
+    speed: 0.90
+    stability: 0.94
+    cost_penalty: 0.20
+    
+  - name: "Gemini 1.5 Flash"
+    quality: 0.82
+    speed: 0.96
+    stability: 0.93
+    cost_penalty: 0.03
+
+  # OpenAI family
+  - name: "GPT-4o"
+    quality: 0.90  # 90.2% HumanEval, 76.6% MATH
+    speed: 0.92
+    stability: 0.96
+    cost_penalty: 0.25
+    
+  - name: "GPT-4o-mini"
+    quality: 0.83
+    speed: 0.97
+    stability: 0.95
+    cost_penalty: 0.007  # $0.0007 per 1K tokens
+    
+  - name: "o4-mini"
+    quality: 0.88  # Higher than GPT-4o-mini due to reasoning
+    speed: 0.90  # Average across modes
+    stability: 0.94
+    cost_penalty: 0.055  # $1.10 input / $4.40 output per 1M
+    reasoning_modes:
+      low:
+        latency: 1.0
+        speed: 0.95
+        quality_boost: 0.0
+      medium:
+        latency: 3.5
+        speed: 0.88
+        quality_boost: 0.03
+      high:
+        latency: 45.0
+        speed: 0.60
+        quality_boost: 0.05
+    
+  - name: "GPT-4.1"
+    quality: 0.90  # Similar to GPT-4o
+    speed: 0.88
+    stability: 0.95
+    cost_penalty: 0.10  # $2.00 input / $8.00 output per 1M
+    context_window: 1000000  # 1M tokens
+    
+  - name: "GPT-4 Turbo"
+    quality: 0.88
+    speed: 0.88
+    stability: 0.94
+    cost_penalty: 0.40
+    
+  - name: "o1-preview"
+    quality: 0.93
+    speed: 0.65
+    stability: 0.90
+    cost_penalty: 0.85
+    
+  - name: "o1-mini"
+    quality: 0.89
+    speed: 0.70
+    stability: 0.88
+    cost_penalty: 0.50
+
+  # Open source models
+  - name: "DeepSeek-V3"
+    quality: 0.86
+    speed: 0.99  # 384 tokens/s for distilled version
+    stability: 0.92
+    cost_penalty: 0.01
+    
+  - name: "DeepSeek-Coder-V2"
+    quality: 0.84
+    speed: 0.88
+    stability: 0.91
+    cost_penalty: 0.01
+    
+  - name: "Llama 3.3 70B"
+    quality: 0.82
+    speed: 0.80
+    stability: 0.89
+    cost_penalty: 0.08
+    
+  - name: "Qwen 2.5 72B"
+    quality: 0.83
+    speed: 0.82
+    stability: 0.90
+    cost_penalty: 0.06
+    
+  - name: "Mistral Large"
+    quality: 0.85
+    speed: 0.86
+    stability: 0.91
+    cost_penalty: 0.15

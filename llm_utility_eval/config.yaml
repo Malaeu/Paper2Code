@@ -1,0 +1,40 @@
+# Weights for utility function
+# Formula: Utility = α * Quality + β * Speed + γ * Stability − δ * CostPenalty
+
+weights:
+  alpha: 1.0     # Quality weight
+  beta: 0.8      # Speed weight  
+  gamma: 1.0     # Stability weight
+  delta: 1.2     # Cost penalty weight
+
+# Optional constraints for filtering
+constraints:
+  # min_quality: 0.80      # Minimum quality threshold
+  # max_cost_penalty: 0.20 # Maximum acceptable cost
+  # min_stability: 0.90    # Minimum stability requirement
+
+# Different weight profiles for different use cases
+profiles:
+  quality_first:
+    alpha: 1.5
+    beta: 0.5
+    gamma: 1.0
+    delta: 0.8
+    
+  speed_optimized:
+    alpha: 0.7
+    beta: 1.5
+    gamma: 0.8
+    delta: 1.0
+    
+  budget_conscious:
+    alpha: 0.9
+    beta: 0.9
+    gamma: 0.9
+    delta: 2.0
+    
+  balanced:
+    alpha: 1.0
+    beta: 1.0
+    gamma: 1.0
+    delta: 1.0

@@ -1,0 +1,219 @@
+# LLM Routing Configuration based on RAPI Analysis
+# Generated from integrated utility and RAPI evaluation
+
+routing_strategy:
+  # Default model for general use (80% of requests)
+  default_model: gemini_2.5_flash
+  
+  # Fallback chain for failures
+  fallback_chain:
+    - gpt-4o-mini
+    - claude_3.5_haiku
+    - deepseek-v3
+
+  # Context-aware routing rules
+  routing_rules:
+    # Rule 1: Fast reasoning tasks
+    - name: "Fast Reasoning"
+      conditions:
+        - needs_reasoning: true
+        - max_latency_seconds: 2.0
+      primary_model: o4-mini
+      model_config:
+        reasoning_mode: low
+      rapi_score: 344
+      
+    # Rule 2: Long document processing
+    - name: "Long Documents" 
+      conditions:
+        - context_length_gt: 200000
+      primary_model: gpt-4.1
+      fallback_model: gemini_2.5_flash
+      rapi_score: 292
+      
+    # Rule 3: High-quality code generation
+    - name: "Code Generation"
+      conditions:
+        - task_type: code_generation
+        - quality_requirement: high
+      primary_model: o4-mini
+      model_config:
+        reasoning_mode: medium
+      fallback_model: claude_3.5_sonnet
+      rapi_score: 273
+      
+    # Rule 4: Complex reasoning tasks
+    - name: "Deep Reasoning"
+      conditions:
+        - task_complexity: high
+        - latency_tolerance: flexible
+        - budget_available: true
+      primary_model: o4-mini
+      model_config:
+        reasoning_mode: high
+      validation_model: gemini_2.5_flash
+      rapi_score: 48
+      
+    # Rule 5: Real-time chat
+    - name: "Interactive Chat"
+      conditions:
+        - task_type: chat
+        - max_latency_seconds: 0.5
+      primary_model: gemini_2.5_flash
+      rapi_score: 4153
+      
+    # Rule 6: Multimodal processing
+    - name: "Multimodal Tasks"
+      conditions:
+        - has_multimodal_input: true
+      primary_model: gemini_2.5_flash
+      model_config:
+        thinking_budget: dynamic  # 0-24576 tokens based on complexity
+      notes: "Only model with native multimodal support"
+      
+    # Rule 7: Audio processing
+    - name: "Audio Analysis"
+      conditions:
+        - input_type: audio
+        - task_complexity: low
+      primary_model: gemini_2.5_flash
+      model_config:
+        thinking_budget: 0  # Disable thinking for simple transcription
+      alternative: "Preprocess with Whisper API for 85% cost savings"
+      
+    # Rule 8: Vision tasks with reasoning
+    - name: "Visual Reasoning"
+      conditions:
+        - input_type: image
+        - needs_reasoning: true
+      primary_model: gemini_2.5_flash
+      model_config:
+        thinking_budget: 10000  # Medium thinking for visual analysis
+      
+    # Rule 9: Budget-conscious tasks
+    - name: "Budget Optimized"
+      conditions:
+        - budget_priority: high
+        - quality_requirement: medium
+      primary_model: deepseek-v3
+      fallback_model: gemini_2.5_flash
+      
+  # Advanced optimization strategies
+  optimization_strategies:
+    consensus_voting:
+      description: "Use multiple models for critical decisions"
+      when_to_use: "High-stakes tasks where accuracy is paramount"
+      implementation:
+        models:
+          - o4-mini (low mode)
+          - gemini_2.5_flash  
+          - gpt-4o-mini
+        aggregation: majority_vote
+        cost_benefit: "70% cheaper than single o4-mini high mode"
+        
+    progressive_refinement:
+      description: "Start with fast model, refine with slower if needed"
+      when_to_use: "Tasks where initial approximation is useful"
+      implementation:
+        stages:
+          1: gemini_2.5_flash
+          2: o4-mini (medium mode) 
+          3: o4-mini (high mode)
+        early_exit_confidence: 0.95
+        
+    context_splitting:
+      description: "Split long contexts across multiple calls"
+      when_to_use: "Documents exceeding model context limits"
+      implementation:
+        chunk_size: 150000
+        overlap: 5000
+        models:
+          - gemini_2.5_flash (for most chunks)
+          - gpt-4.1 (for synthesis)
+          
+    multimodal_optimization:
+      description: "Optimize costs for multimodal inputs"
+      when_to_use: "Processing audio/video with Gemini 2.5 Flash"
+      implementation:
+        strategies:
+          - name: "Preprocessing Pipeline"
+            steps:
+              1: "Extract audio → Whisper API → Text"
+              2: "Extract keyframes from video → Image analysis"
+              3: "Process text + key images with thinking enabled"
+            cost_savings: "Up to 85% vs direct multimodal processing"
+          - name: "Dynamic Thinking Budget"
+            steps:
+              1: "Analyze complexity with 0 thinking tokens"
+              2: "If complex, re-run with appropriate thinking budget"
+              3: "Cache results for similar inputs"
+            cost_savings: "50-80% on output costs"
+          
+    thinking_cascade:
+      description: "Progressive thinking budget allocation"
+      when_to_use: "Tasks with uncertain complexity"
+      implementation:
+        stages:
+          1: {model: gemini_2.5_flash, thinking_budget: 0}
+          2: {model: gemini_2.5_flash, thinking_budget: 5000}
+          3: {model: gemini_2.5_flash, thinking_budget: 15000}
+          4: {model: o4-mini, reasoning_mode: high}
+        early_exit_confidence: 0.9
+
+# Model-specific optimizations
+model_optimizations:
+  gemini_2.5_flash:
+    batch_size: 10
+    temperature: 0.7
+    streaming: true
+    multimodal_settings:
+      auto_detect_modality: true
+      token_limits:
+        text: 1048576  # 1M+ tokens
+        image_max_resolution: 4096x4096
+        audio_max_duration: 3600  # 1 hour = 90K tokens
+        video_max_duration: 300   # 5 min = 77K tokens
+    thinking_budget_strategy:
+      simple_tasks: 0
+      medium_complexity: 5000
+      high_complexity: 15000
+      maximum_allowed: 24576
+    cost_optimization:
+      prefer_text_preprocessing: true  # Convert audio/video to text when possible
+      batch_multimodal_inputs: true
+      cache_repeated_images: true
+    
+  o4-mini:
+    reasoning_mode_selection:
+      low: "latency < 2s required"
+      medium: "balanced quality/speed"
+      high: "maximum accuracy needed"
+    streaming_after_thinking: true
+    
+  gpt-4.1:
+    context_packing: aggressive
+    use_for: "document_qa, long_context_tasks"
+    
+  claude_3.5_sonnet:
+    retry_on_rate_limit: true
+    max_retries: 3
+    use_for: "stable_production_tasks"
+
+# Performance targets
+performance_targets:
+  average_latency_ms: 500
+  p95_latency_ms: 2000
+  cost_per_1k_requests: 5.00
+  quality_threshold: 0.85
+  
+# Monitoring and alerts
+monitoring:
+  track_metrics:
+    - model_latency
+    - model_cost
+    - model_quality_score
+    - routing_decisions
+  alert_thresholds:
+    latency_p95_ms: 3000
+    daily_cost_usd: 100
+    quality_drop_percent: 10

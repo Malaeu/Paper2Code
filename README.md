@@ -35,6 +35,23 @@ cd scripts
 bash run.sh
 ```
 
+## 🔀 LLM Router
+The router configuration lives in [`llm_router/config.yaml`](./llm_router/config.yaml).
+
+| Task Pattern | Primary Model | Fallback |
+|--------------|--------------|---------|
+| `chat\|faq\|rag` | `gemini_flash_25` | `claude_sonnet_35` |
+| `code\|unit_tests` | `claude_sonnet_37` | `o4mini` |
+| `long_doc>300k` | `gpt41` | `claude_sonnet_35` |
+| `tool_reasoning` | `o4mini` | `gemini_flash_25` |
+
+Override the config by setting `LLM_CFG`:
+
+```bash
+export LLM_CFG=/path/to/custom.yaml
+```
+
+
 ### Using Open Source Models with vLLM
 - If you encounter any issues installing vLLM, please refer to the [official vLLM repository](https://github.com/vllm-project/vllm).
 - The default model is `deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct`.
