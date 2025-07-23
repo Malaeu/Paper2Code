@@ -102,9 +102,33 @@ If you have access to the LaTeX source and plan to use it with PaperCoder, you m
 
 Note: In our experiments, we converted all paper PDFs to JSON format. The original workflow relied on the
 [`s2orc-doc2json`](https://github.com/allenai/s2orc-doc2json) repository. As of 2025 more capable open-source
-libraries exist. We provide two approaches below.
+libraries exist. We provide multiple approaches below.
 
-#### Legacy approach (compatible with older instructions)
+#### Option 1: Modern Vision-based Approach (Recommended)
+
+We now provide a modern PDF to JSON converter that uses vision models (Gemini 2.5 Flash) instead of the legacy GROBID approach. This method is:
+- **95% cheaper** than traditional approaches
+- **Faster** (no Java services required)  
+- **More accurate** for complex layouts, formulas, and tables
+
+```bash
+# Install dependencies
+pip install pdf2image pytesseract aiohttp tqdm
+
+# With Gemini API (best quality)
+export GEMINI_API_KEY="your-api-key"
+python codes/pdf_to_json_modern.py -i paper.pdf -o output.json
+
+# Or use the convenience script
+cd scripts
+./run_modern_pdf2json.sh ../examples/Transformer.pdf
+```
+
+For more details, see [Modern PDF to JSON Documentation](docs/MODERN_PDF2JSON.md).
+
+#### Option 2: Legacy GROBID Approach
+
+If you prefer the traditional method, you can still use the s2orc-doc2json repository:
 
 1. Clone `s2orc-doc2json` and run its processing service:
 
