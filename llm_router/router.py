@@ -4,6 +4,24 @@ try:
 except Exception:
     yaml = None
 from functools import lru_cache
+from pathlib import Path
+
+# Auto-load .env file if it exists
+def _load_env():
+    env_path = Path(".env")
+    if env_path.exists():
+        with open(env_path) as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    key = key.strip()
+                    value = value.strip().strip('"\'')
+                    if value and key not in os.environ:  # Don't override existing env vars
+                        os.environ[key] = value
+
+# Load .env on import
+_load_env()
 
 CONFIG_PATH = os.environ.get("LLM_CFG", "llm_router/config.yaml")
 

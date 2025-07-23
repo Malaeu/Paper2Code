@@ -23,6 +23,19 @@ Our method outperforms strong baselines on both Paper2Code and PaperBench and pr
 ## ⚡ Quick Start
 - Note: The following command runs example paper ([Attention Is All You Need](https://arxiv.org/abs/1706.03762)).  
 
+### 🔑 API Keys Setup
+First, configure your API keys by creating a `.env` file:
+
+```bash
+# Copy the example file and edit with your keys
+cp .env.example .env
+
+# Edit .env file with your actual API keys:
+# OPENAI_API_KEY=sk-proj-your-openai-key
+# ANTHROPIC_API_KEY=sk-ant-api03-your-anthropic-key  
+# GEMINI_API_KEY=your-gemini-key
+```
+
 ### Using OpenAI API
 - 💵 Estimated cost for using o3-mini: $0.50–$0.70
 
