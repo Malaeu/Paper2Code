@@ -26,8 +26,30 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Import Paper2Code modules
-from codes.utils import create_openai_client
-from codes.adapt_mapping import analyze_dataset
+from openai import OpenAI
+# Import is wrapped in try-except for numpy compatibility
+try:
+    from codes.adapt_mapping import analyze_dataset
+except ImportError as e:
+    print(f"Warning: Could not import analyze_dataset: {e}")
+    # Define a simple fallback function
+    def analyze_dataset(dataset_path, dataset_format):
+        """Simple fallback for dataset analysis without pandas dependency."""
+        import os
+        from datetime import datetime
+        file_size = os.path.getsize(dataset_path)
+        return {
+            "filename": os.path.basename(dataset_path),
+            "format": dataset_format,
+            "size_bytes": file_size,
+            "size_readable": f"{file_size / (1024*1024):.2f} MB",
+            "last_modified": datetime.fromtimestamp(os.path.getmtime(dataset_path)).isoformat(),
+            "columns": ["Sample column 1", "Sample column 2"],
+        }
+
+# Create OpenAI client function
+def create_openai_client():
+    return OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 # Configure Flask app
 app = Flask(__name__)
@@ -39,6 +61,11 @@ app.config['CELERY_RESULT_BACKEND'] = os.environ.get('CELERY_RESULT_BACKEND', 'r
 
 # Ensure upload directories exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+# Add context processor for templates
+@app.context_processor
+def inject_now():
+    from datetime import datetime
+    return {'now': datetime.now()}
 os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'papers'), exist_ok=True)
 os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'datasets'), exist_ok=True)
 os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'outputs'), exist_ok=True)

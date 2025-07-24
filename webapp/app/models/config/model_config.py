@@ -133,6 +133,18 @@ class ModelConfig(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.datetime.utcnow, 
                            onupdate=datetime.datetime.utcnow, nullable=False)
     
+    def __init__(self, **kwargs):
+        """Initialize a model configuration."""
+        super(ModelConfig, self).__init__(**kwargs)
+        
+        # Set provider-specific defaults
+        if self.provider == ModelProvider.OPENAI:
+            self.requires_api_key = True
+        elif self.provider == ModelProvider.ANTHROPIC:
+            self.requires_api_key = True
+        elif self.provider == ModelProvider.LOCAL:
+            self.requires_api_key = False
+    
     def to_dict(self) -> Dict[str, Any]:
         """Convert model config to dictionary."""
         result = {
@@ -147,7 +159,11 @@ class ModelConfig(db.Model):
             'supports_function_calling': self.supports_function_calling,
             'requires_api_key': self.requires_api_key,
             'is_active': self.is_active,
-            'is_default': self.is_default
+            'is_default': self.is_default,
+            'command_args': self.command_args,
+            'gpt_version': self.gpt_version,
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat()
         }
         
         # Add cost information if available
@@ -160,6 +176,94 @@ class ModelConfig(db.Model):
             })
             
         return result
+        
+    def validate(self) -> Tuple[bool, List[str]]:
+        """
+        Validate the model configuration.
+        
+        Returns:
+            Tuple of (is_valid, error_messages)
+        """
+        errors = []
+        
+        # Required fields
+        if not self.model_id:
+            errors.append("Model ID is required")
+        if not self.display_name:
+            errors.append("Display name is required")
+        if self.context_length <= 0:
+            errors.append("Context length must be greater than 0")
+            
+        # Provider-specific validation
+        if self.provider == ModelProvider.OPENAI and not self.gpt_version:
+            errors.append("GPT version is required for OpenAI models")
+        
+        if self.provider == ModelProvider.LOCAL and not self.command_args:
+            errors.append("Command arguments are required for local models")
+            
+        return len(errors) == 0, errors
+        
+    def estimate_cost(self, input_tokens: int, output_tokens: int) -> float:
+        """
+        Estimate the cost of running this model.
+        
+        Args:
+            input_tokens: Number of input tokens
+            output_tokens: Number of output tokens
+            
+        Returns:
+            Estimated cost in USD
+        """
+        if not self.cost_info:
+            return 0.0
+            
+        input_cost = input_tokens * self.cost_info.input_cost_per_1k_tokens / 1000
+        output_cost = output_tokens * self.cost_info.output_cost_per_1k_tokens / 1000
+        
+        return input_cost + output_cost
+        
+    def get_api_key_env_var(self) -> str:
+        """
+        Get the environment variable name for this model's API key.
+        
+        Returns:
+            Environment variable name
+        """
+        if self.provider == ModelProvider.OPENAI:
+            return 'OPENAI_API_KEY'
+        elif self.provider == ModelProvider.ANTHROPIC:
+            return 'ANTHROPIC_API_KEY'
+        elif self.provider == ModelProvider.HUGGINGFACE:
+            return 'HUGGINGFACE_API_KEY'
+        elif self.provider == ModelProvider.DEEPSEEK:
+            return 'DEEPSEEK_API_KEY'
+        else:
+            return f'{self.provider.value.upper()}_API_KEY'
+            
+    def needs_api_key(self) -> bool:
+        """
+        Check if this model requires an API key.
+        
+        Returns:
+            True if an API key is required, False otherwise
+        """
+        return self.requires_api_key
+        
+    def has_api_key(self) -> bool:
+        """
+        Check if an API key is available for this model.
+        
+        Returns:
+            True if an API key is available, False otherwise
+        """
+        if not self.requires_api_key:
+            return True
+            
+        env_var = self.get_api_key_env_var()
+        return env_var in os.environ and bool(os.environ[env_var])
+        
+    def __repr__(self):
+        return f'<ModelConfig {self.display_name} ({self.model_id})>'
 
 
 class DirectoryConfig(db.Model):

@@ -7,10 +7,13 @@ from flask_login import (
 )
 from werkzeug.urls import url_parse
 from datetime import datetime, timedelta
+import json
 
 from app.extensions import db, login_manager
 from app.models.auth import User, UserStatus
-from app.services import EmailService
+from app.models.auth.activity_log import ActivityType
+from app.services.email_service import EmailService
+from app.services.activity_service import ActivityService
 from app.utils import PasswordValidator
 from . import auth_bp
 
@@ -82,6 +85,13 @@ def login():
         # Log in the user
         login_user(user, remember=remember_me)
         
+        # Log the login activity
+        ActivityService.log_activity(
+            user_id=user.id,
+            activity_type=ActivityType.LOGIN,
+            description=f"User logged in from {request.remote_addr}"
+        )
+        
         # Redirect to the page the user was trying to access
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
@@ -96,6 +106,15 @@ def login():
 @login_required
 def logout():
     """Handle user logout."""
+    user_id = current_user.id
+    
+    # Log logout activity before actually logging out
+    ActivityService.log_activity(
+        user_id=user_id,
+        activity_type=ActivityType.LOGOUT,
+        description="User logged out"
+    )
+    
     logout_user()
     flash('You have been successfully logged out.', 'info')
     return redirect(url_for('main.index'))
@@ -292,9 +311,23 @@ def edit_profile():
             flash('Username already in use.', 'error')
             return render_template('auth/edit_profile.html')
         
+        # Get old username for logging
+        old_username = current_user.username
+        
         # Update user profile
         current_user.username = username
         db.session.commit()
+        
+        # Log profile update activity
+        ActivityService.log_activity(
+            user_id=current_user.id,
+            activity_type=ActivityType.PROFILE_UPDATE,
+            description="Username changed",
+            meta_data={
+                "old_username": old_username,
+                "new_username": username
+            }
+        )
         
         flash('Profile updated successfully.', 'success')
         return redirect(url_for('auth.profile'))
@@ -340,8 +373,211 @@ def change_password():
         current_user.set_password(new_password)
         db.session.commit()
         
+        # Log password change activity
+        ActivityService.log_activity(
+            user_id=current_user.id,
+            activity_type=ActivityType.PASSWORD_CHANGE,
+            description="Password changed"
+        )
+        
         flash('Password updated successfully.', 'success')
         return redirect(url_for('auth.profile'))
     
     # GET request - show change password form
     return render_template('auth/change_password.html')
+
+
+@auth_bp.route('/profile/email/change', methods=['POST'])
+@login_required
+def change_email():
+    """Handle email change request with verification."""
+    new_email = request.form.get('new_email')
+    password = request.form.get('password')
+    
+    # Validate form data
+    if not new_email or not password:
+        flash('All fields are required.', 'error')
+        return redirect(url_for('auth.edit_profile'))
+    
+    # Verify password
+    if not current_user.check_password(password):
+        flash('Current password is incorrect.', 'error')
+        return redirect(url_for('auth.edit_profile'))
+    
+    # Check if email already exists
+    if User.query.filter_by(email=new_email.lower()).first():
+        flash('Email already registered to another account.', 'error')
+        return redirect(url_for('auth.edit_profile'))
+    
+    # Don't allow changing to the same email
+    if new_email.lower() == current_user.email.lower():
+        flash('New email must be different from current email.', 'error')
+        return redirect(url_for('auth.edit_profile'))
+    
+    # Store the new email in a pending state
+    current_user.pending_email = new_email.lower()
+    current_user.verification_token = current_user.generate_verification_token()
+    current_user.verification_token_expiry = datetime.utcnow() + timedelta(hours=24)
+    db.session.commit()
+    
+    # Send verification email to the new address
+    EmailService.send_email_change_verification(current_user, new_email)
+    
+    # Log email change request activity
+    ActivityService.log_activity(
+        user_id=current_user.id,
+        activity_type=ActivityType.EMAIL_CHANGE,
+        description="Email change requested",
+        meta_data={
+            "current_email": current_user.email,
+            "new_email": new_email
+        }
+    )
+    
+    flash('A verification email has been sent to your new email address. '
+          'Please check your inbox and click the verification link to complete the email change.', 
+          'info')
+    return redirect(url_for('auth.profile'))
+
+
+@auth_bp.route('/email/verify/<token>')
+@login_required
+def verify_email_change(token):
+    """Handle email change verification."""
+    # Verify the token matches the current user's token
+    if not current_user.verification_token or current_user.verification_token != token:
+        flash('Invalid verification link.', 'error')
+        return redirect(url_for('auth.profile'))
+    
+    # Check if token is expired
+    if current_user.verification_token_expiry < datetime.utcnow():
+        flash('Verification link has expired. Please request a new email change.', 'error')
+        return redirect(url_for('auth.edit_profile'))
+    
+    # Check if there's a pending email change
+    if not current_user.pending_email:
+        flash('No pending email change found.', 'error')
+        return redirect(url_for('auth.profile'))
+    
+    # Verify the email change
+    old_email = current_user.verify_email_change(token)
+    if old_email:
+        db.session.commit()
+        
+        # Send confirmation emails to both old and new addresses
+        EmailService.send_email(
+            subject='Paper2Code - Your Email Has Been Changed',
+            recipients=[old_email],
+            html_body=render_template('email/email_change_old.html', 
+                                      user=current_user, 
+                                      old_email=old_email),
+            text_body=render_template('email/email_change_old.txt', 
+                                      user=current_user, 
+                                      old_email=old_email)
+        )
+        
+        EmailService.send_email(
+            subject='Paper2Code - Your Email Change is Complete',
+            recipients=[current_user.email],
+            html_body=render_template('email/email_change_confirmed.html', 
+                                      user=current_user),
+            text_body=render_template('email/email_change_confirmed.txt', 
+                                      user=current_user)
+        )
+        
+        # Log email verification activity
+        ActivityService.log_activity(
+            user_id=current_user.id,
+            activity_type=ActivityType.EMAIL_VERIFY,
+            description="Email address verified and changed",
+            meta_data={
+                "old_email": old_email,
+                "new_email": current_user.email
+            }
+        )
+        
+        flash('Your email address has been successfully updated.', 'success')
+    else:
+        flash('Failed to verify email change. Please try again.', 'error')
+    
+    return redirect(url_for('auth.profile'))
+
+
+@auth_bp.route('/profile/delete', methods=['POST'])
+@login_required
+def delete_account():
+    """Handle account deletion."""
+    password = request.form.get('password')
+    delete_confirmation = request.form.get('delete_confirmation')
+    
+    # Validate form data
+    if not password or not delete_confirmation:
+        flash('All fields are required.', 'error')
+        return redirect(url_for('auth.profile'))
+    
+    # Verify delete confirmation
+    if delete_confirmation != 'DELETE':
+        flash('Please type DELETE exactly to confirm account deletion.', 'error')
+        return redirect(url_for('auth.profile'))
+    
+    # Verify password
+    if not current_user.check_password(password):
+        flash('Current password is incorrect.', 'error')
+        return redirect(url_for('auth.profile'))
+    
+    try:
+        # Get user data for confirmation email
+        user_email = current_user.email
+        user_username = current_user.username
+        
+        # Delete related data (API keys and usage will be deleted via cascade)
+        # Note: For other related data, you would delete those relations here
+        
+        # Log account deletion activity before deleting the user
+        ActivityService.log_activity(
+            user_id=current_user.id,
+            activity_type=ActivityType.PROFILE_UPDATE,
+            description="Account deleted",
+            meta_data={
+                "username": current_user.username,
+                "email": current_user.email
+            }
+        )
+        
+        # Set status to inactive first (soft delete) in case we need to recover
+        current_user.status = UserStatus.INACTIVE
+        db.session.commit()
+        
+        # Hard delete the user
+        db.session.delete(current_user)
+        db.session.commit()
+        
+        # Log out the user
+        logout_user()
+        
+        # Send confirmation email
+        EmailService.send_email(
+            subject='Paper2Code - Account Deletion Confirmation',
+            recipients=[user_email],
+            html_body=render_template('email/account_deletion.html', username=user_username),
+            text_body=render_template('email/account_deletion.txt', username=user_username)
+        )
+        
+        flash('Your account has been permanently deleted. We are sorry to see you go.', 'info')
+        return redirect(url_for('main.index'))
+        
+    except Exception as e:
+        current_app.logger.error(f"Error deleting account: {str(e)}")
+        db.session.rollback()
+        flash('An error occurred while trying to delete your account. Please try again.', 'error')
+        return redirect(url_for('auth.profile'))
+
+
+@auth_bp.route('/profile/activity')
+@login_required
+def activity():
+    """Display user activity history."""
+    # Get user's recent activities
+    activities = ActivityService.get_user_activities(current_user.id, limit=50)
+    
+    return render_template('auth/activity.html', activities=activities)

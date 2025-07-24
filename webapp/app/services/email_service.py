@@ -107,3 +107,29 @@ class EmailService:
         text = render_template('email/welcome.txt', user=user)
         
         EmailService.send_email(subject, recipients, html, text)
+        
+    @staticmethod
+    def send_email_change_verification(user, new_email):
+        """
+        Send verification email for email address change.
+        
+        Args:
+            user: User object containing verification token
+            new_email: The new email address to verify
+        """
+        verification_url = f"{current_app.config.get('SITE_URL', 'http://localhost:5000')}/auth/email/verify/{user.verification_token}"
+        
+        subject = "Paper2Code - Verify Your New Email Address"
+        recipients = [new_email]
+        
+        html = render_template('email/verify_email_change.html',
+                              user=user,
+                              new_email=new_email,
+                              verification_url=verification_url)
+        
+        text = render_template('email/verify_email_change.txt',
+                              user=user,
+                              new_email=new_email,
+                              verification_url=verification_url)
+        
+        EmailService.send_email(subject, recipients, html, text)

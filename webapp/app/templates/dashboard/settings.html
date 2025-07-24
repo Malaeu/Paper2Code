@@ -26,6 +26,22 @@
 
     <!-- Settings Categories -->
     <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+        <!-- Usage & Costs -->
+        <div class="col">
+            <div class="card h-100 hover-shadow">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-purple bg-opacity-10 p-3 rounded-3 me-3">
+                            <i class="bi bi-graph-up fs-3 text-purple"></i>
+                        </div>
+                        <h5 class="card-title mb-0">Usage & Costs</h5>
+                    </div>
+                    <p class="card-text">Track API usage, monitor costs, and view detailed usage statistics.</p>
+                    <a href="{{ url_for('dashboard.usage_dashboard') }}" class="btn btn-purple mt-2">View Usage</a>
+                </div>
+            </div>
+        </div>
+        
         <!-- AI Models -->
         <div class="col">
             <div class="card h-100 hover-shadow">
@@ -167,6 +183,20 @@
     .hover-shadow:hover {
         box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
         transform: translateY(-5px);
+    }
+    .text-purple {
+        color: #6f42c1;
+    }
+    .bg-purple {
+        background-color: #6f42c1;
+    }
+    .btn-purple {
+        background-color: #6f42c1;
+        color: white;
+    }
+    .btn-purple:hover {
+        background-color: #5a32a3;
+        color: white;
     }
 </style>
 {% endblock %}

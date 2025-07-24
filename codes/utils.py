@@ -2,6 +2,7 @@ import json
 import re
 import os
 from datetime import datetime
+from openai import OpenAI
 
 def extract_planning(trajectories_json_file_path):
     with open(trajectories_json_file_path) as f:
@@ -353,7 +354,7 @@ def num_tokens_from_messages(messages, model="gpt-4o-2024-08-06"):
         num_tokens += tokens_per_message
         for key, value in message.items():
             # num_tokens += len(encoding.encode(value) 
-            num_tokens += len(encoding.encode(value, allowed_special={"<|endoftext|>"},disallowed_special=()))
+            num_tokens += len(encoding.encode(value, allowed_special={"\n"},disallowed_special=()))
             
             if key == "name":
                 num_tokens += tokens_per_name
@@ -440,3 +441,92 @@ def get_now_str():
     now = now.split(".")[0]
     now = now.replace("-","").replace(" ","_").replace(":","")
     return now # now - "20250427_205124"
+
+def create_openai_client():
+    """
+    Create and return an OpenAI client compatible with new v1.x API,
+    wrapped to somewhat resemble the old structure for minimal changes elsewhere
+    if client.chat.completions.create is already being called by the user code.
+
+    Returns:
+        An object that allows calls like `client.chat.completions.create(...)`.
+    """
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        try:
+            # Try to get it from a common config file if not in env
+            config_path = os.path.expanduser("~/.openai/api_key") # Example path
+            if os.path.exists(config_path):
+                with open(config_path, "r") as f:
+                    api_key = f.read().strip()
+        except Exception:
+            pass # Ignore errors in finding config file
+
+    if not api_key:
+        # Fallback to a default or placeholder if really needed for some non-authed tools,
+        # but for actual OpenAI calls, this will fail.
+        # Consider raising ValueError if key is strictly required for all paths.
+        print("Warning: OPENAI_API_KEY not found. Using a placeholder if applicable, but API calls will fail.")
+        api_key = "YOUR_API_KEY" # Placeholder, will cause errors if used for real calls
+
+    # This is the new style client, correctly initialized.
+    actual_new_client = OpenAI(api_key=api_key)
+
+    class LegacyCompatOpenAI:
+        def __init__(self, client_to_wrap):
+            self._new_client = client_to_wrap
+            # Expose .chat.completions.create directly if that's the only used path
+            self.chat = self.Chat(self._new_client)
+
+        class Chat:
+            def __init__(self, client_to_wrap):
+                self._new_client = client_to_wrap
+                self.completions = self.Completions(self._new_client)
+
+            class Completions:
+                def __init__(self, client_to_wrap):
+                    self._new_client = client_to_wrap
+
+                def create(self, model, messages, temperature=None, max_tokens=None, **kwargs):
+                    # Construct params for the new API call
+                    api_params = {"model": model, "messages": messages}
+                    
+                    if temperature is not None:
+                        api_params["temperature"] = temperature
+                    if max_tokens is not None:
+                        api_params["max_tokens"] = max_tokens
+                    
+                    # Merge remaining kwargs (like response_format, top_p, etc.)
+                    api_params.update(kwargs)
+                    
+                    # Removed the specific 'o' model (Anthropic) parameter transformation logic
+                    # as it's likely incorrect when using a standard OpenAI client instance.
+                    # If Anthropic or other models need special handling, it should be done
+                    # with their respective clients or a more sophisticated routing mechanism.
+                                        
+                    # Use the wrapped new_client to make the call
+                    response = self._new_client.chat.completions.create(**api_params)
+                    return response
+                    
+    # Return the compatible client, wrapping the actual new client instance
+    return LegacyCompatOpenAI(actual_new_client)
+
+def get_response_content(response):
+    """
+    Extract content from an OpenAI API response.
+    
+    Args:
+        response: The OpenAI API response object
+        
+    Returns:
+        str: The content of the response
+    """
+    if hasattr(response, 'choices') and len(response.choices) > 0:
+        choice = response.choices[0]
+        if hasattr(choice, 'message') and hasattr(choice.message, 'content'):
+            return choice.message.content
+        elif hasattr(choice, 'text'):
+            return choice.text
+    
+    print("Warning: Unable to extract content from response.")
+    return ""

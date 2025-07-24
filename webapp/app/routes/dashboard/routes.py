@@ -21,6 +21,12 @@ def index():
     projects = Project.query.filter_by(user_id=current_user.id).order_by(
         Project.created_at.desc()).all()
     
+    # Import services here to avoid circular imports
+    from app.services.usage_service import UsageService
+    
+    # Get usage statistics
+    usage_stats = UsageService.get_user_usage_stats(current_user.id)
+    
     # Calculate statistics
     completed_projects = sum(1 for p in projects if p.status == ProjectStatus.COMPLETED)
     
@@ -28,14 +34,17 @@ def index():
         'total_projects': len(projects),
         'papers_processed': len(projects),  # For now, this equals total projects
         'code_repositories': completed_projects,
-        'api_calls': current_user.total_api_calls
+        'api_calls': current_user.total_api_calls,
+        'total_tokens': usage_stats['total_tokens'],
+        'total_cost': usage_stats['total_cost'],
     }
     
     return render_template(
         'dashboard/index.html',
         title='Dashboard',
         projects=projects,
-        stats=stats
+        stats=stats,
+        usage_stats=usage_stats
     )
 
 
@@ -188,24 +197,56 @@ def settings():
     )
 
 
+@dashboard_bp.route('/usage')
+@login_required
+def usage_dashboard():
+    """Usage statistics dashboard."""
+    # Import here to avoid circular imports
+    from app.services.usage_service import UsageService
+    
+    # Get usage statistics
+    stats = UsageService.get_user_usage_stats(current_user.id)
+    
+    # Calculate summary stats for the dashboard
+    summary = {
+        'total_api_calls': stats['total_api_calls'],
+        'total_tokens': stats['total_tokens'],
+        'total_cost': stats['total_cost'],
+        'active_keys': sum(1 for key in stats['api_keys'] if key.get('calls_count', 0) > 0),
+        'model_count': len(stats['models']),
+    }
+    
+    return render_template(
+        'dashboard/usage.html',
+        title='Usage Dashboard',
+        stats=stats,
+        summary=summary
+    )
+
+
 @dashboard_bp.route('/settings/models')
 @login_required
 def settings_models():
     """Model settings page."""
+    # Import here to avoid circular imports
+    from app.services.model_service import ModelService
+    
     # Get all models
-    models = get_available_models()
+    models = ModelService.get_all_models()
     
     # Get saved API keys from settings
-    api_keys = {
-        'openai': ProjectSettings.get('openai_api_key', ''),
-        'anthropic': ProjectSettings.get('anthropic_api_key', ''),
-        'huggingface': ProjectSettings.get('huggingface_api_key', '')
-    }
+    api_keys = ModelService.get_api_keys()
     
     # Calculate usage statistics
     total_cost = sum(model.get('total_cost', 0) for model in models)
     total_tokens = sum(model.get('total_tokens_used', 0) for model in models)
     total_api_calls = current_user.total_api_calls if current_user else 0
+    
+    # Get providers for filtering
+    providers = [
+        {'id': provider.value, 'name': provider.display_name} 
+        for provider in ModelProvider
+    ]
     
     return render_template(
         'dashboard/settings_models.html',
@@ -214,7 +255,8 @@ def settings_models():
         api_keys=api_keys,
         total_cost=total_cost,
         total_tokens=total_tokens,
-        total_api_calls=total_api_calls
+        total_api_calls=total_api_calls,
+        providers=providers
     )
 
 
@@ -222,47 +264,38 @@ def settings_models():
 @login_required
 def create_model():
     """Create a new model configuration."""
+    # Import here to avoid circular imports
+    from app.services.model_service import ModelService
+    
     form = ModelConfigForm()
     
     if form.validate_on_submit():
-        # Create cost info
-        cost_info = ModelCostInfo(
-            model_id=form.model_id.data,
-            input_cost_per_1k_tokens=form.input_cost_per_1k_tokens.data or 0.0,
-            output_cost_per_1k_tokens=form.output_cost_per_1k_tokens.data or 0.0
-        )
-        db.session.add(cost_info)
-        db.session.flush()  # To get the ID
+        # Prepare model data from form
+        model_data = {
+            'model_id': form.model_id.data,
+            'display_name': form.display_name.data,
+            'provider': form.provider.data,
+            'description': form.description.data,
+            'context_length': form.context_length.data,
+            'supports_vision': form.supports_vision.data,
+            'supports_function_calling': form.supports_function_calling.data,
+            'requires_api_key': form.requires_api_key.data,
+            'command_args': form.command_args.data,
+            'gpt_version': form.gpt_version.data,
+            'is_active': form.is_active.data,
+            'is_default': form.is_default.data,
+            'input_cost_per_1k_tokens': form.input_cost_per_1k_tokens.data or 0.0,
+            'output_cost_per_1k_tokens': form.output_cost_per_1k_tokens.data or 0.0
+        }
         
-        # Create model config
-        model_config = ModelConfig(
-            model_id=form.model_id.data,
-            display_name=form.display_name.data,
-            provider=ModelProvider(form.provider.data),
-            description=form.description.data,
-            context_length=form.context_length.data,
-            supports_vision=form.supports_vision.data,
-            supports_function_calling=form.supports_function_calling.data,
-            requires_api_key=form.requires_api_key.data,
-            command_args=form.command_args.data,
-            gpt_version=form.gpt_version.data,
-            is_active=form.is_active.data,
-            is_default=form.is_default.data,
-            cost_info_id=cost_info.id
-        )
+        # Create model through service
+        success, message, model = ModelService.create_model(model_data)
         
-        db.session.add(model_config)
-        
-        # If this is set as default, clear other defaults
-        if form.is_default.data:
-            other_models = ModelConfig.query.filter(ModelConfig.id != model_config.id).all()
-            for model in other_models:
-                model.is_default = False
-        
-        db.session.commit()
-        
-        flash(f'Model "{form.display_name.data}" created successfully', 'success')
-        return redirect(url_for('dashboard.settings_models'))
+        if success:
+            flash(message, 'success')
+            return redirect(url_for('dashboard.settings_models'))
+        else:
+            flash(message, 'error')
     
     # Display form errors
     for field, errors in form.errors.items():
@@ -281,58 +314,66 @@ def create_model():
 @login_required
 def edit_model(model_id):
     """Edit an existing model configuration."""
-    model = ModelConfig.query.get_or_404(model_id)
+    # Import here to avoid circular imports
+    from app.services.model_service import ModelService
+    
+    # Get model data
+    model_dict = ModelService.get_model_by_id(model_id)
+    if not model_dict:
+        flash(f'Model with ID {model_id} not found', 'error')
+        return redirect(url_for('dashboard.settings_models'))
     
     if request.method == 'GET':
-        # Populate form with model data
-        form = ModelConfigForm(obj=model)
+        # Create form and populate with model data
+        form = ModelConfigForm()
+        
+        # Set form values from model data
+        form.model_id.data = model_dict.get('model_id')
+        form.display_name.data = model_dict.get('display_name')
+        form.provider.data = model_dict.get('provider')
+        form.description.data = model_dict.get('description')
+        form.context_length.data = model_dict.get('context_length')
+        form.supports_vision.data = model_dict.get('supports_vision')
+        form.supports_function_calling.data = model_dict.get('supports_function_calling')
+        form.requires_api_key.data = model_dict.get('requires_api_key')
+        form.command_args.data = model_dict.get('command_args')
+        form.gpt_version.data = model_dict.get('gpt_version')
+        form.is_active.data = model_dict.get('is_active')
+        form.is_default.data = model_dict.get('is_default')
         
         # Set cost info values if available
-        if model.cost_info:
-            form.input_cost_per_1k_tokens.data = model.cost_info.input_cost_per_1k_tokens
-            form.output_cost_per_1k_tokens.data = model.cost_info.output_cost_per_1k_tokens
+        form.input_cost_per_1k_tokens.data = model_dict.get('input_cost_per_1k_tokens', 0.0)
+        form.output_cost_per_1k_tokens.data = model_dict.get('output_cost_per_1k_tokens', 0.0)
     else:
         form = ModelConfigForm()
         
         if form.validate_on_submit():
-            # Update model config
-            model.model_id = form.model_id.data
-            model.display_name = form.display_name.data
-            model.provider = ModelProvider(form.provider.data)
-            model.description = form.description.data
-            model.context_length = form.context_length.data
-            model.supports_vision = form.supports_vision.data
-            model.supports_function_calling = form.supports_function_calling.data
-            model.requires_api_key = form.requires_api_key.data
-            model.command_args = form.command_args.data
-            model.gpt_version = form.gpt_version.data
-            model.is_active = form.is_active.data
-            model.is_default = form.is_default.data
+            # Prepare model data from form
+            model_data = {
+                'model_id': form.model_id.data,
+                'display_name': form.display_name.data,
+                'provider': form.provider.data,
+                'description': form.description.data,
+                'context_length': form.context_length.data,
+                'supports_vision': form.supports_vision.data,
+                'supports_function_calling': form.supports_function_calling.data,
+                'requires_api_key': form.requires_api_key.data,
+                'command_args': form.command_args.data,
+                'gpt_version': form.gpt_version.data,
+                'is_active': form.is_active.data,
+                'is_default': form.is_default.data,
+                'input_cost_per_1k_tokens': form.input_cost_per_1k_tokens.data or 0.0,
+                'output_cost_per_1k_tokens': form.output_cost_per_1k_tokens.data or 0.0
+            }
             
-            # Update cost info
-            if model.cost_info:
-                model.cost_info.input_cost_per_1k_tokens = form.input_cost_per_1k_tokens.data or 0.0
-                model.cost_info.output_cost_per_1k_tokens = form.output_cost_per_1k_tokens.data or 0.0
+            # Update model through service
+            success, message, updated_model = ModelService.update_model(model_id, model_data)
+            
+            if success:
+                flash(message, 'success')
+                return redirect(url_for('dashboard.settings_models'))
             else:
-                cost_info = ModelCostInfo(
-                    model_id=model.model_id,
-                    input_cost_per_1k_tokens=form.input_cost_per_1k_tokens.data or 0.0,
-                    output_cost_per_1k_tokens=form.output_cost_per_1k_tokens.data or 0.0
-                )
-                db.session.add(cost_info)
-                db.session.flush()  # To get the ID
-                model.cost_info_id = cost_info.id
-            
-            # If this is set as default, clear other defaults
-            if form.is_default.data:
-                other_models = ModelConfig.query.filter(ModelConfig.id != model.id).all()
-                for other_model in other_models:
-                    other_model.is_default = False
-            
-            db.session.commit()
-            
-            flash(f'Model "{form.display_name.data}" updated successfully', 'success')
-            return redirect(url_for('dashboard.settings_models'))
+                flash(message, 'error')
         
         # Display form errors
         for field, errors in form.errors.items():
@@ -341,9 +382,9 @@ def edit_model(model_id):
     
     return render_template(
         'dashboard/edit_model.html',
-        title=f'Edit Model: {model.display_name}',
+        title=f'Edit Model: {model_dict.get("display_name")}',
         form=form,
-        model=model
+        model=model_dict
     )
 
 
@@ -351,26 +392,23 @@ def edit_model(model_id):
 @login_required
 def set_default_model():
     """Set a model as the default."""
+    # Import here to avoid circular imports
+    from app.services.model_service import ModelService
+    
     model_id = request.form.get('model_id', type=int)
     
     if not model_id:
         flash('Model ID is required', 'error')
         return redirect(url_for('dashboard.settings_models'))
     
-    # Get the model
-    model = ModelConfig.query.get_or_404(model_id)
+    # Set model as default through service
+    success, message = ModelService.set_default_model(model_id)
     
-    # Set this model as default
-    model.is_default = True
-    
-    # Clear other defaults
-    other_models = ModelConfig.query.filter(ModelConfig.id != model.id).all()
-    for other_model in other_models:
-        other_model.is_default = False
-    
-    db.session.commit()
-    
-    flash(f'Model "{model.display_name}" set as the default model', 'success')
+    if success:
+        flash(message, 'success')
+    else:
+        flash(message, 'error')
+        
     return redirect(url_for('dashboard.settings_models'))
 
 
@@ -378,6 +416,9 @@ def set_default_model():
 @login_required
 def toggle_model_status():
     """Activate or deactivate a model."""
+    # Import here to avoid circular imports
+    from app.services.model_service import ModelService
+    
     model_id = request.form.get('model_id', type=int)
     action = request.form.get('action')
     
@@ -385,20 +426,14 @@ def toggle_model_status():
         flash('Invalid request', 'error')
         return redirect(url_for('dashboard.settings_models'))
     
-    # Get the model
-    model = ModelConfig.query.get_or_404(model_id)
+    # Toggle model status through service
+    success, message = ModelService.toggle_model_status(model_id, action == 'activate')
     
-    # Update model status
-    if action == 'activate':
-        model.is_active = True
-        message = f'Model "{model.display_name}" activated'
+    if success:
+        flash(message, 'success')
     else:
-        model.is_active = False
-        message = f'Model "{model.display_name}" deactivated'
-    
-    db.session.commit()
-    
-    flash(message, 'success')
+        flash(message, 'error')
+        
     return redirect(url_for('dashboard.settings_models'))
 
 
@@ -406,6 +441,9 @@ def toggle_model_status():
 @login_required
 def save_api_key():
     """Save an API key for a provider."""
+    # Import here to avoid circular imports
+    from app.services.model_service import ModelService
+    
     provider = request.form.get('provider')
     api_key = request.form.get('api_key')
     
@@ -413,12 +451,12 @@ def save_api_key():
         flash('Provider and API key are required', 'error')
         return redirect(url_for('dashboard.settings_models'))
     
-    # Save the API key to settings
-    setting_key = f'{provider}_api_key'
-    ProjectSettings.set(setting_key, api_key, f'API key for {provider}')
+    # Save API key through service
+    success, message = ModelService.save_api_key(provider, api_key)
     
-    # Also set in environment for current session
-    os.environ[f'{provider.upper()}_API_KEY'] = api_key
-    
-    flash(f'API key for {provider.capitalize()} saved successfully', 'success')
+    if success:
+        flash(message, 'success')
+    else:
+        flash(message, 'error')
+        
     return redirect(url_for('dashboard.settings_models'))

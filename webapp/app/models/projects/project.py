@@ -83,6 +83,8 @@ class Project(db.Model):
     # Output information
     output_path = db.Column(db.String(255), nullable=True)
     repository_url = db.Column(db.String(255), nullable=True)
+    export_path = db.Column(db.String(255), nullable=True)
+    last_exported_at = db.Column(db.DateTime, nullable=True)
     
     # Log and error tracking
     log_path = db.Column(db.String(255), nullable=True)
@@ -112,12 +114,24 @@ class Project(db.Model):
         return os.path.basename(self.paper_path)
     
     def get_paper_size(self):
-        """Return the size of the paper file in human-readable format."""
+        """
+        Return the size of the paper file in human-readable format.
+        Uses configured directories from DirectoryService.
+        """
         if not self.paper_path:
             return None
             
         try:
-            path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'papers', self.paper_path)
+            # Import here to avoid circular imports
+            from app.services.directory_service import DirectoryService
+            
+            # Get configured upload directory or fall back to default
+            upload_dir = DirectoryService.get_directory_path_by_name(
+                'uploads', 
+                default_path=current_app.config.get('UPLOAD_FOLDER', os.path.join(current_app.root_path, 'uploads'))
+            )
+            
+            path = os.path.join(upload_dir, 'papers', self.paper_path)
             size_bytes = os.path.getsize(path)
             
             # Convert to human-readable format
@@ -133,15 +147,27 @@ class Project(db.Model):
         return self.status.color
     
     def save_paper(self, file):
-        """Save the uploaded paper file and update project metadata."""
+        """
+        Save the uploaded paper file and update project metadata.
+        Uses configured directories from DirectoryService.
+        """
         if file and file.filename:
+            # Import here to avoid circular imports
+            from app.services.directory_service import DirectoryService
+            
             # Create secure filename
             filename = secure_filename(file.filename)
             # Add unique identifier to prevent filename collisions
             unique_filename = f"{datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{self.uuid}_{filename}"
             
+            # Get configured upload directory or fall back to default
+            upload_dir = DirectoryService.get_directory_path_by_name(
+                'uploads', 
+                default_path=current_app.config.get('UPLOAD_FOLDER', os.path.join(current_app.root_path, 'uploads'))
+            )
+            
             # Make sure the upload directory exists
-            upload_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'papers')
+            upload_path = os.path.join(upload_dir, 'papers')
             os.makedirs(upload_path, exist_ok=True)
             
             # Save the file
@@ -168,6 +194,108 @@ class Project(db.Model):
             
         db.session.commit()
     
+    def get_project_paths(self):
+        """
+        Get all paths related to this project using directory configurations.
+        
+        Returns:
+            Dict of paths for this project
+        """
+        # Import here to avoid circular imports
+        from app.services.directory_service import DirectoryService
+        
+        project_name = f"project_{self.id}"
+        
+        # Get configured directories or fall back to defaults
+        upload_dir = DirectoryService.get_directory_path_by_name(
+            'uploads', 
+            default_path=current_app.config.get('UPLOAD_FOLDER', os.path.join(current_app.root_path, 'uploads'))
+        )
+        
+        output_dir = DirectoryService.get_directory_path_by_name(
+            'outputs',
+            default_path=os.path.join(current_app.config.get('PROJECT_ROOT', os.path.dirname(current_app.root_path)), 'outputs')
+        )
+        
+        logs_dir = DirectoryService.get_directory_path_by_name(
+            'logs',
+            default_path=os.path.join(current_app.root_path, 'logs')
+        )
+        
+        # Build path dictionary
+        paths = {
+            'paper_path': os.path.join(upload_dir, 'papers', self.paper_path) if self.paper_path else None,
+            'pdf_json_path': os.path.join(upload_dir, 'temp', f"{project_name}.json"),
+            'pdf_json_cleaned_path': os.path.join(upload_dir, 'temp', f"{project_name}_cleaned.json"),
+            'output_dir': os.path.join(output_dir, project_name),
+            'output_repo_dir': self.output_path or os.path.join(output_dir, f"{project_name}_repo"),
+            'log_path': self.log_path or os.path.join(logs_dir, 'projects', f"{project_name}.log")
+        }
+        
+        return paths
+    
+    def check_paths_match_config(self) -> bool:
+        """
+        Check if the current project paths match the configured directories.
+        
+        Returns:
+            bool: True if paths match configuration, False otherwise
+        """
+        # Check if we even have the required paths
+        if not self.output_path or not self.log_path:
+            return False
+            
+        # Get the expected paths based on current configuration
+        paths = self.get_project_paths()
+        
+        # Check if the stored paths match the expected ones
+        # We only check the base directories, not the full paths
+        
+        # For output path
+        expected_output_dir = os.path.dirname(paths['output_repo_dir'])
+        current_output_dir = os.path.dirname(self.output_path)
+        output_matches = current_output_dir == expected_output_dir
+        
+        # For log path
+        expected_log_dir = os.path.dirname(paths['log_path'])
+        current_log_dir = os.path.dirname(self.log_path)
+        log_matches = current_log_dir == expected_log_dir
+        
+        return output_matches and log_matches
+    
+    def update_paths_to_config(self) -> bool:
+        """
+        Update project paths to match the current directory configuration.
+        This is useful when directory configurations have changed.
+        
+        Returns:
+            bool: True if paths were updated, False if no update was needed
+        """
+        # Check if paths already match
+        if self.check_paths_match_config():
+            return False
+            
+        # Get the new paths
+        paths = self.get_project_paths()
+        
+        # Save the old paths for potential file migration
+        old_output_path = self.output_path
+        old_log_path = self.log_path
+        
+        # Update the project with new paths
+        self.output_path = paths['output_repo_dir']
+        self.log_path = paths['log_path']
+        
+        # Create the directories if they don't exist
+        os.makedirs(os.path.dirname(self.output_path), exist_ok=True)
+        os.makedirs(os.path.dirname(self.log_path), exist_ok=True)
+        
+        # TODO: Consider migrating files from old paths to new paths
+        # This would be implemented here if requested
+        
+        db.session.commit()
+        return True
+    
     def to_dict(self):
         """Convert project to dictionary for API responses."""
         return {
@@ -186,6 +314,8 @@ class Project(db.Model):
             'progress': self.progress,
             'current_task': self.current_task,
             'repository_url': self.repository_url,
+            'export_path': self.export_path,
+            'last_exported_at': self.last_exported_at.isoformat() if self.last_exported_at else None,
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat(),
             'completed_at': self.completed_at.isoformat() if self.completed_at else None

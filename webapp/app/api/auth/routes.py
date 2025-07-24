@@ -1,13 +1,18 @@
 from datetime import datetime, timedelta
 import functools
 import jwt
-from flask import request, jsonify, current_app, make_response
+from flask import request, jsonify, current_app, make_response, Blueprint
 from werkzeug.security import check_password_hash
 
 from app.extensions import db
 from app.models.auth import User, ApiKey, UserStatus
 from app.utils import PasswordValidator
 from app.services import EmailService
+
+# Create Blueprint for auth API routes
+auth_api_bp = Blueprint('auth_api', __name__)
+
+# Import api_bp for backward compatibility
 from app.api import api_bp
 
 
@@ -143,7 +148,8 @@ def api_key_required(f):
     return decorated
 
 
-@api_bp.route('/auth/login', methods=['POST'])
+@auth_api_bp.route('/login', methods=['POST'])
+@api_bp.route('/auth/login', methods=['POST'])  # Keep for backward compatibility
 def login():
     """API endpoint for user login."""
     data = request.get_json()
@@ -234,7 +240,8 @@ def login():
     return response
 
 
-@api_bp.route('/auth/register', methods=['POST'])
+@auth_api_bp.route('/register', methods=['POST'])
+@api_bp.route('/auth/register', methods=['POST'])  # Keep for backward compatibility
 def register():
     """API endpoint for user registration."""
     data = request.get_json()
@@ -300,7 +307,8 @@ def register():
     }), 201
 
 
-@api_bp.route('/auth/logout', methods=['POST'])
+@auth_api_bp.route('/logout', methods=['POST'])
+@api_bp.route('/auth/logout', methods=['POST'])  # Keep for backward compatibility
 @token_required
 def logout(current_user):
     """API endpoint for user logout."""
@@ -316,7 +324,8 @@ def logout(current_user):
     return response
 
 
-@api_bp.route('/auth/verify/<token>', methods=['GET'])
+@auth_api_bp.route('/verify/<token>', methods=['GET'])
+@api_bp.route('/auth/verify/<token>', methods=['GET'])  # Keep for backward compatibility
 def verify_email(token):
     """API endpoint for email verification."""
     # Find user with this verification token
@@ -350,7 +359,8 @@ def verify_email(token):
     })
 
 
-@api_bp.route('/auth/password/reset', methods=['POST'])
+@auth_api_bp.route('/password/reset', methods=['POST'])
+@api_bp.route('/auth/password/reset', methods=['POST'])  # Keep for backward compatibility
 def password_reset_request():
     """API endpoint for password reset request."""
     data = request.get_json()
@@ -383,7 +393,8 @@ def password_reset_request():
     })
 
 
-@api_bp.route('/auth/password/reset/<token>', methods=['POST'])
+@auth_api_bp.route('/password/reset/<token>', methods=['POST'])
+@api_bp.route('/auth/password/reset/<token>', methods=['POST'])  # Keep for backward compatibility
 def password_reset(token):
     """API endpoint for password reset with token."""
     data = request.get_json()
@@ -446,7 +457,8 @@ def password_reset(token):
     })
 
 
-@api_bp.route('/auth/user', methods=['GET'])
+@auth_api_bp.route('/user', methods=['GET'])
+@api_bp.route('/auth/user', methods=['GET'])  # Keep for backward compatibility
 @token_required
 def get_user(current_user):
     """API endpoint for getting current user info."""
@@ -456,7 +468,8 @@ def get_user(current_user):
     })
 
 
-@api_bp.route('/auth/password/change', methods=['POST'])
+@auth_api_bp.route('/password/change', methods=['POST'])
+@api_bp.route('/auth/password/change', methods=['POST'])  # Keep for backward compatibility
 @token_required
 def change_password(current_user):
     """API endpoint for changing user password."""

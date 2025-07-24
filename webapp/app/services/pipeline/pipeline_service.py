@@ -55,6 +55,7 @@ class PipelineService:
     def setup_project_paths(project: Project) -> Dict[str, str]:
         """
         Set up the directories and paths for pipeline processing.
+        Uses the project's get_project_paths method which retrieves paths from directory configurations.
         
         Args:
             project: The project to set up paths for
@@ -62,18 +63,8 @@ class PipelineService:
         Returns:
             Dict containing paths for pipeline processing
         """
-        base_path = current_app.config['UPLOAD_FOLDER']
-        project_name = f"project_{project.id}"
-        
-        # Define paths
-        paths = {
-            'paper_path': os.path.join(base_path, 'papers', project.paper_path),
-            'pdf_json_path': os.path.join(base_path, 'temp', f"{project_name}.json"),
-            'pdf_json_cleaned_path': os.path.join(base_path, 'temp', f"{project_name}_cleaned.json"),
-            'output_dir': os.path.join(base_path, 'outputs', project_name),
-            'output_repo_dir': os.path.join(base_path, 'outputs', f"{project_name}_repo"),
-            'log_path': os.path.join(current_app.root_path, 'logs', 'projects', f"{project_name}.log")
-        }
+        # Get paths using the project's method
+        paths = project.get_project_paths()
         
         # Create directories if they don't exist
         os.makedirs(os.path.dirname(paths['pdf_json_path']), exist_ok=True)
@@ -416,10 +407,9 @@ class PipelineService:
             bool: True if successful, False otherwise
         """
         try:
-            # Find the paper JSON file
-            base_path = current_app.config['UPLOAD_FOLDER']
-            project_name = f"project_{project.id}"
-            pdf_json_path = os.path.join(base_path, 'temp', f"{project_name}.json")
+            # Get the project paths
+            paths = project.get_project_paths()
+            pdf_json_path = paths['pdf_json_path']
             
             if not os.path.exists(pdf_json_path):
                 return False

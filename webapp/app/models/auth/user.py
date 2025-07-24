@@ -34,6 +34,7 @@ class User(UserMixin, db.Model):
     email_verified = db.Column(db.Boolean, default=False, nullable=False)
     verification_token = db.Column(db.String(100), unique=True, nullable=True)
     verification_token_expiry = db.Column(db.DateTime, nullable=True)
+    pending_email = db.Column(db.String(120), nullable=True)
     
     # Two-factor authentication
     two_factor_enabled = db.Column(db.Boolean, default=False, nullable=False)
@@ -86,6 +87,20 @@ class User(UserMixin, db.Model):
             self.status = UserStatus.ACTIVE
             return True
         return False
+        
+    def verify_email_change(self, token):
+        """Verify email change using the provided token."""
+        if (self.verification_token and 
+                self.verification_token == token and 
+                self.verification_token_expiry > datetime.datetime.utcnow() and
+                self.pending_email):
+            old_email = self.email
+            self.email = self.pending_email
+            self.pending_email = None
+            self.verification_token = None
+            self.verification_token_expiry = None
+            return old_email
+        return None
     
     def update_login_info(self, ip_address):
         """Update login information after successful login."""

@@ -26,7 +26,7 @@
 
     <!-- Stats Cards -->
     <div class="row mb-4">
-        <div class="col-md-3 mb-3">
+        <div class="col-md-3 col-sm-6 mb-3">
             <div class="card text-center h-100">
                 <div class="card-body">
                     <h3 class="display-4">{{ stats.total_projects }}</h3>
@@ -34,7 +34,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
+        <div class="col-md-3 col-sm-6 mb-3">
             <div class="card text-center h-100">
                 <div class="card-body">
                     <h3 class="display-4">{{ stats.papers_processed }}</h3>
@@ -42,7 +42,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
+        <div class="col-md-3 col-sm-6 mb-3">
             <div class="card text-center h-100">
                 <div class="card-body">
                     <h3 class="display-4">{{ stats.code_repositories }}</h3>
@@ -50,11 +50,89 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
+        <div class="col-md-3 col-sm-6 mb-3">
             <div class="card text-center h-100">
                 <div class="card-body">
-                    <h3 class="display-4">{{ stats.api_calls }}</h3>
+                    <h3 class="display-4">{{ stats.api_calls | number_format }}</h3>
                     <p class="card-text text-muted">API Calls</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Usage Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 bg-light mb-2">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Usage Statistics</h5>
+                        <a href="{{ url_for('dashboard.usage_dashboard') }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-graph-up me-2"></i>View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-success bg-opacity-10 p-3 rounded-3 me-3">
+                            <i class="bi bi-chat-square-text fs-3 text-success"></i>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Total Tokens</h5>
+                            <h3 class="mb-0">{{ stats.total_tokens | number_format }}</h3>
+                        </div>
+                    </div>
+                    <p class="card-text text-muted">Tokens processed by AI models</p>
+                    <div class="progress" style="height: 8px;">
+                        {% set tokens_used = stats.total_tokens or 1 %}
+                        {% for model in usage_stats.models %}
+                        <div class="progress-bar bg-{{ loop.index % 5 + 1 }}" role="progressbar" 
+                             style="width: {{ (model.tokens_used / tokens_used * 100) | round }}%" 
+                             title="{{ model.display_name }}: {{ model.tokens_used | number_format }} tokens"></div>
+                        {% endfor %}
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <small class="text-muted">{{ usage_stats.models | length }} models used</small>
+                        <a href="{{ url_for('dashboard.usage_dashboard') }}#models" class="text-primary small">View breakdown</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-danger bg-opacity-10 p-3 rounded-3 me-3">
+                            <i class="bi bi-currency-dollar fs-3 text-danger"></i>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Estimated Cost</h5>
+                            <h3 class="mb-0">${{ stats.total_cost | round(2) }}</h3>
+                        </div>
+                    </div>
+                    <p class="card-text text-muted">Total cost of API usage</p>
+                    <div class="progress" style="height: 8px;">
+                        {% set total_cost = stats.total_cost or 1 %}
+                        {% for model in usage_stats.models %}
+                        <div class="progress-bar bg-{{ loop.index % 5 + 1 }}" role="progressbar" 
+                             style="width: {{ (model.cost / total_cost * 100) | round }}%" 
+                             title="{{ model.display_name }}: ${{ model.cost | round(2) }}"></div>
+                        {% endfor %}
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <small class="text-muted">
+                            {% if usage_stats.api_keys %}
+                                {{ usage_stats.api_keys | length }} API keys
+                            {% else %}
+                                No API keys configured
+                            {% endif %}
+                        </small>
+                        <a href="{{ url_for('dashboard.usage_dashboard') }}#estimate" class="text-primary small">Cost estimator</a>
+                    </div>
                 </div>
             </div>
         </div>

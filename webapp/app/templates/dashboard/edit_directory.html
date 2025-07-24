@@ -1,155 +1,216 @@
-{% extends "dashboard/layout.html" %}
+{% extends "base.html" %}
 
-{% block title %}{{ 'Edit' if directory else 'Create' }} Directory Configuration{% endblock %}
+{% block title %}{{ 'Edit' if directory else 'Create' }} Directory Configuration - Paper2Code{% endblock %}
 
 {% block scripts %}
-  {{ super() }}
   <script src="{{ url_for('static', filename='js/directory_manager.js') }}"></script>
 {% endblock %}
 
-{% block page_title %}{{ 'Edit' if directory else 'Create' }} Directory Configuration{% endblock %}
-{% block page_subtitle %}{{ 'Modify an existing' if directory else 'Add a new' }} directory for Paper2Code{% endblock %}
-
 {% block content %}
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-md-8">
-      <div class="card">
-        <div class="card-header">
-          <h3 class="card-title">Directory Configuration</h3>
-        </div>
-        <div class="card-body">
-          <form method="POST" novalidate>
-            {{ form.hidden_tag() }}
-            
-            <div class="form-group">
-              {{ form.name.label }}
-              {{ form.name(class="form-control") }}
-              {% if form.name.errors %}
-                <div class="text-danger">
-                  {% for error in form.name.errors %}
-                    <span>{{ error }}</span>
-                  {% endfor %}
+<div class="container py-4">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
-              {% endif %}
-              <small class="form-text text-muted">A descriptive name for this directory (e.g., "Paper Uploads", "Code Outputs")</small>
-            </div>
-            
-            <div class="form-group">
-              {{ form.path.label }}
-              {{ form.path(class="form-control") }}
-              {% if form.path.errors %}
-                <div class="text-danger">
-                  {% for error in form.path.errors %}
-                    <span>{{ error }}</span>
-                  {% endfor %}
-                </div>
-              {% endif %}
-              <small class="form-text text-muted">
-                Full path to the directory. Must be an absolute path (e.g., "/path/to/directory").
-              </small>
-              <div id="path-feedback" class="mt-2">
-                {% if directory and directory.exists %}
-                  <span class="text-success"><i class="fas fa-check-circle"></i> Directory exists</span><br>
-                  {% if directory.readable %}
-                  <span class="text-success"><i class="fas fa-check-circle"></i> Directory is readable</span><br>
-                  {% else %}
-                  <span class="text-warning"><i class="fas fa-exclamation-triangle"></i> Directory is not readable</span><br>
-                  {% endif %}
-                  {% if directory.writable %}
-                  <span class="text-success"><i class="fas fa-check-circle"></i> Directory is writable</span>
-                  {% else %}
-                  <span class="text-warning"><i class="fas fa-exclamation-triangle"></i> Directory is not writable</span>
-                  {% endif %}
-                {% elif directory %}
-                  <span class="text-info"><i class="fas fa-info-circle"></i> Directory does not exist (will be created)</span>
-                {% endif %}
-              </div>
-            </div>
-            
-            <div class="form-group">
-              {{ form.description.label }}
-              {{ form.description(class="form-control", rows=3) }}
-              {% if form.description.errors %}
-                <div class="text-danger">
-                  {% for error in form.description.errors %}
-                    <span>{{ error }}</span>
-                  {% endfor %}
-                </div>
-              {% endif %}
-              <small class="form-text text-muted">A brief description of what this directory is used for</small>
-            </div>
-            
-            <div class="form-check mb-3">
-              {{ form.is_default(class="form-check-input") }}
-              {{ form.is_default.label(class="form-check-label") }}
-              <small class="form-text text-muted d-block">
-                If checked, this will be the default directory for its type. This will unset any other default.
-              </small>
-            </div>
-            
-            {% if directory and directory.id %}
-            <div class="form-check mb-3">
-              {{ form.move_files(class="form-check-input") }}
-              {{ form.move_files.label(class="form-check-label") }}
-              <small class="form-text text-muted d-block">
-                If checked and you change the path, files from the old directory will be copied to the new location.
-              </small>
-            </div>
-            {% endif %}
-            
-            <div class="form-group">
-              <button type="submit" class="btn btn-primary">
-                <i class="fas fa-save"></i> Save Directory
-              </button>
-              <a href="{{ url_for('dashboard.settings_directories') }}" class="btn btn-secondary">
-                <i class="fas fa-times"></i> Cancel
-              </a>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-    
-    <div class="col-md-4">
-      <div class="card">
-        <div class="card-header">
-          <h3 class="card-title">Directory Information</h3>
-        </div>
-        <div class="card-body">
-          <p>Directory configurations tell Paper2Code where to find and store important files.</p>
-          
-          <h5>Common Directory Types:</h5>
-          <ul>
-            <li><strong>uploads</strong> - Temporary storage for uploaded papers</li>
-            <li><strong>papers</strong> - Storage for processed papers</li>
-            <li><strong>outputs</strong> - Generated code and output files</li>
-            <li><strong>data</strong> - Dataset and reference files</li>
-          </ul>
-          
-          <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i> 
-            Make sure the directory exists and the application has permission to read and write to it.
-          </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 
-          {% if directory %}
-          <div class="mt-4">
-            <h5>Status:</h5>
-            <ul class="list-unstyled">
-              <li>
-                <i class="{{ 'fas fa-check text-success' if directory.exists else 'fas fa-times text-danger' }}"></i>
-                Directory {{ 'exists' if directory.exists else 'does not exist' }}
-              </li>
-              <li>
-                <i class="{{ 'fas fa-check text-success' if directory.writable else 'fas fa-times text-danger' }}"></i>
-                Directory {{ 'is writable' if directory.writable else 'is not writable' }}
-              </li>
-            </ul>
-          </div>
-          {% endif %}
-        </div>
-      </div>
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">{{ 'Edit' if directory else 'Create' }} Directory</h1>
+        <a href="{{ url_for('dashboard.settings_directories') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i> Back to Directories
+        </a>
     </div>
-  </div>
+
+    <div class="row">
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Directory Configuration</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.name.label(class="form-label") }}
+                            {{ form.name(class="form-control") }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">A descriptive name for this directory (e.g., "Paper Uploads", "Code Outputs")</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.path.label(class="form-label") }}
+                            {{ form.path(class="form-control", data_original_path=directory.path if directory else '') }}
+                            {% if form.path.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.path.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Full path to the directory. Must be an absolute path (e.g., "/path/to/directory").
+                            </small>
+                            <div id="path-feedback" class="mt-2"></div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.description.label(class="form-label") }}
+                            {{ form.description(class="form-control", rows=3) }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.description.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">A brief description of what this directory is used for</small>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            {{ form.is_default(class="form-check-input") }}
+                            {{ form.is_default.label(class="form-check-label") }}
+                            <small class="form-text text-muted d-block">
+                                If checked, this will be the default directory for its type. This will unset any other default.
+                            </small>
+                        </div>
+                        
+                        {% if directory and directory.id %}
+                        <div class="form-check mb-3">
+                            {{ form.move_files(class="form-check-input") }}
+                            {{ form.move_files.label(class="form-check-label") }}
+                            <small class="form-text text-muted d-block">
+                                If checked and you change the path, files from the old directory will be copied to the new location.
+                            </small>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="d-flex justify-content-end mt-4">
+                            <a href="{{ url_for('dashboard.settings_directories') }}" class="btn btn-outline-secondary me-2">
+                                <i class="bi bi-x"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Save Directory
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Directory Information</h5>
+                </div>
+                <div class="card-body">
+                    <p>Directory configurations tell Paper2Code where to find and store important files.</p>
+                    
+                    <h6 class="mt-3 mb-2">Common Directory Types:</h6>
+                    <div class="list-group mb-3">
+                        <div class="list-group-item list-group-item-action d-flex align-items-center">
+                            <i class="bi bi-upload text-primary me-3 fs-5"></i>
+                            <div>
+                                <strong>uploads</strong>
+                                <p class="mb-0 small text-muted">Temporary storage for uploaded papers</p>
+                            </div>
+                        </div>
+                        <div class="list-group-item list-group-item-action d-flex align-items-center">
+                            <i class="bi bi-file-earmark-text text-success me-3 fs-5"></i>
+                            <div>
+                                <strong>papers</strong>
+                                <p class="mb-0 small text-muted">Storage for processed papers</p>
+                            </div>
+                        </div>
+                        <div class="list-group-item list-group-item-action d-flex align-items-center">
+                            <i class="bi bi-code-square text-danger me-3 fs-5"></i>
+                            <div>
+                                <strong>outputs</strong>
+                                <p class="mb-0 small text-muted">Generated code and output files</p>
+                            </div>
+                        </div>
+                        <div class="list-group-item list-group-item-action d-flex align-items-center">
+                            <i class="bi bi-database text-info me-3 fs-5"></i>
+                            <div>
+                                <strong>data</strong>
+                                <p class="mb-0 small text-muted">Dataset and reference files</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i> 
+                        Make sure the directory exists and the application has permission to read and write to it.
+                    </div>
+
+                    {% if directory %}
+                    <div class="mt-4">
+                        <h6 class="mb-2">Current Status:</h6>
+                        <ul class="list-group mb-0">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Exists
+                                <span class="badge bg-{{ 'success' if directory.exists else 'danger' }} rounded-pill">
+                                    <i class="bi bi-{{ 'check' if directory.exists else 'x' }}"></i>
+                                </span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Readable
+                                <span class="badge bg-{{ 'success' if directory.readable else 'warning' }} rounded-pill">
+                                    <i class="bi bi-{{ 'check' if directory.readable else 'exclamation' }}"></i>
+                                </span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Writable
+                                <span class="badge bg-{{ 'success' if directory.writable else 'warning' }} rounded-pill">
+                                    <i class="bi bi-{{ 'check' if directory.writable else 'exclamation' }}"></i>
+                                </span>
+                            </li>
+                            {% if directory.exists and directory.usage_info.file_count > 0 %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Files
+                                <span class="badge bg-primary rounded-pill">
+                                    {{ directory.usage_info.file_count }}
+                                </span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Size
+                                <span class="badge bg-info rounded-pill">
+                                    {{ directory.usage_info.used_space }}
+                                </span>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    .spin {
+        animation: spin 1s linear infinite;
+        display: inline-block;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
 {% endblock %}

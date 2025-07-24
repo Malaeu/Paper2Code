@@ -4,20 +4,26 @@ Adaptation mapping module for Paper2Code.
 Analyzes user datasets and generates/confirms variable mappings for methodology adaptation.
 """
 
-import json
-import argparse
-import os
 import sys
+import os
+print(f"DEBUG: adapt_mapping.py sys.path: {sys.path}")
+print(f"DEBUG: adapt_mapping.py CWD: {os.getcwd()}")
+
+import argparse
+import json
 import pandas as pd
 import yaml
 from openai import OpenAI
+import utils
 from utils import print_response, print_log_cost, load_accumulated_cost, save_accumulated_cost
+import traceback
 
 def detect_dataset_structure(dataset_path):
     """
     Automatically detect the structure of the dataset.
     Returns column names, types, and sample values.
     """
+    print(f"DEBUG: detect_dataset_structure trying to read: {dataset_path}")
     try:
         # Determine file type
         file_ext = os.path.splitext(dataset_path)[1].lower()
@@ -62,6 +68,9 @@ def detect_dataset_structure(dataset_path):
             "stats": stats
         }
     except Exception as e:
+        print(f"DEBUG: Exception in detect_dataset_structure: {str(e)}")
+        print("DEBUG: Full traceback:")
+        traceback.print_exc()
         return {"error": str(e)}
 
 def generate_mapping_template(paper_content, dataset_structure, original_name, adapted_name, gpt_version, client, dataset_path=None):
@@ -214,7 +223,7 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
     
     # Load API key from environment
-    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+    client = utils.create_openai_client()
     
     # Load JSON data
     with open(pdf_json_path, 'r') as f:

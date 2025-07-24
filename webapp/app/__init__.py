@@ -61,11 +61,13 @@ def create_app(config_name=None):
     from app.routes.auth import auth_bp
     from app.routes.dashboard import dashboard_bp
     from app.api import api_bp
+    from app.utils.template_filters import template_filters
     
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(api_bp)
+    app.register_blueprint(template_filters)
     
     # Initialize default directories
     with app.app_context():

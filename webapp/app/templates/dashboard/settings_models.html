@@ -15,6 +15,9 @@
             {% endfor %}
         {% endif %}
     {% endwith %}
+    
+    <!-- Container for dynamic alerts -->
+    <div id="alerts-container"></div>
 
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -35,16 +38,22 @@
             <div class="card shadow">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Available Models</h5>
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="modelFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            Filter
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="modelFilterDropdown">
-                            <li><a class="dropdown-item" href="#">All Models</a></li>
-                            <li><a class="dropdown-item" href="#">OpenAI</a></li>
-                            <li><a class="dropdown-item" href="#">Anthropic</a></li>
-                            <li><a class="dropdown-item" href="#">Local Models</a></li>
-                        </ul>
+                    <div class="d-flex align-items-center">
+                        <div class="input-group me-2" style="width: 250px;">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="text" class="form-control form-control-sm" id="model-search" placeholder="Search models...">
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="modelFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                Filter by Provider
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="modelFilterDropdown">
+                                <li><a class="dropdown-item" href="#" data-filter="all">All Providers</a></li>
+                                {% for provider in providers %}
+                                <li><a class="dropdown-item" href="#" data-filter="{{ provider.id }}">{{ provider.name }}</a></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
                     </div>
                 </div>
                 <div class="card-body">
@@ -63,7 +72,11 @@
                             </thead>
                             <tbody>
                                 {% for model in models %}
-                                <tr {% if not model.is_active %}class="table-secondary"{% endif %}>
+                                <tr class="model-row {% if not model.is_active %}table-secondary{% endif %}" 
+                                    data-provider="{{ model.provider }}"
+                                    data-model-id="{{ model.id }}"
+                                    data-input-cost="{{ model.input_cost_per_1k_tokens|default(0.0) }}"
+                                    data-output-cost="{{ model.output_cost_per_1k_tokens|default(0.0) }}">
                                     <td>
                                         <div class="d-flex align-items-center">
                                             {% if model.provider == 'openai' %}
@@ -80,9 +93,9 @@
                                                 <i class="bi bi-gear me-2"></i>
                                             {% endif %}
                                             <div>
-                                                <span class="fw-bold">{{ model.display_name }}</span>
+                                                <span class="fw-bold model-name">{{ model.display_name }}</span>
                                                 {% if not model.is_active %}<span class="badge bg-secondary ms-2">Inactive</span>{% endif %}
-                                                <div class="small text-muted">{{ model.model_id }}</div>
+                                                <div class="small text-muted model-id">{{ model.model_id }}</div>
                                             </div>
                                         </div>
                                     </td>
@@ -96,31 +109,49 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <a href="{{ url_for('dashboard.edit_model', model_id=model.id) }}" class="btn btn-outline-primary">Edit</a>
+                                        <div class="d-flex">
+                                            <div class="dropdown me-2">
+                                                <button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    Actions
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li>
+                                                        <a href="{{ url_for('dashboard.edit_model', model_id=model.id) }}" class="dropdown-item">
+                                                            <i class="bi bi-pencil-square me-2"></i> Edit
+                                                        </a>
+                                                    </li>
+                                                    {% if not model.is_default %}
+                                                    <li>
+                                                        <button class="dropdown-item set-default-model" data-model-id="{{ model.id }}" data-model-name="{{ model.display_name }}">
+                                                            <i class="bi bi-check-circle me-2 text-success"></i> Set as Default
+                                                        </button>
+                                                    </li>
+                                                    {% endif %}
+                                                    {% if model.is_active %}
+                                                    <li>
+                                                        <button class="dropdown-item deactivate-model" data-model-id="{{ model.id }}" data-model-name="{{ model.display_name }}">
+                                                            <i class="bi bi-toggle-off me-2 text-danger"></i> Deactivate
+                                                        </button>
+                                                    </li>
+                                                    {% else %}
+                                                    <li>
+                                                        <button class="dropdown-item activate-model" data-model-id="{{ model.id }}" data-model-name="{{ model.display_name }}">
+                                                            <i class="bi bi-toggle-on me-2 text-success"></i> Activate
+                                                        </button>
+                                                    </li>
+                                                    {% endif %}
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li>
+                                                        <button class="dropdown-item delete-model" data-model-id="{{ model.id }}" data-model-name="{{ model.display_name }}">
+                                                            <i class="bi bi-trash me-2 text-danger"></i> Delete
+                                                        </button>
+                                                    </li>
+                                                </ul>
+                                            </div>
                                             {% if model.is_default %}
-                                                <button type="button" class="btn btn-outline-secondary" disabled>Default</button>
-                                            {% else %}
-                                                <form action="{{ url_for('dashboard.set_default_model') }}" method="POST" class="d-inline">
-                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                    <input type="hidden" name="model_id" value="{{ model.id }}">
-                                                    <button type="submit" class="btn btn-outline-success">Set Default</button>
-                                                </form>
-                                            {% endif %}
-                                            {% if model.is_active %}
-                                                <form action="{{ url_for('dashboard.toggle_model_status') }}" method="POST" class="d-inline">
-                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                    <input type="hidden" name="model_id" value="{{ model.id }}">
-                                                    <input type="hidden" name="action" value="deactivate">
-                                                    <button type="submit" class="btn btn-outline-danger">Deactivate</button>
-                                                </form>
-                                            {% else %}
-                                                <form action="{{ url_for('dashboard.toggle_model_status') }}" method="POST" class="d-inline">
-                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                    <input type="hidden" name="model_id" value="{{ model.id }}">
-                                                    <input type="hidden" name="action" value="activate">
-                                                    <button type="submit" class="btn btn-outline-success">Activate</button>
-                                                </form>
+                                            <span class="badge bg-success d-flex align-items-center">
+                                                <i class="bi bi-check-circle me-1"></i> Default
+                                            </span>
                                             {% endif %}
                                         </div>
                                     </td>
@@ -158,6 +189,9 @@
                                 <div class="input-group mb-3">
                                     <input type="password" class="form-control" name="api_key" placeholder="Enter API Key"
                                            value="{{ api_keys.get('openai', '') }}" required>
+                                    <button class="btn btn-outline-secondary toggle-password" type="button">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
                                     <button class="btn btn-primary" type="submit">Save</button>
                                 </div>
                                 <div class="form-text small">Find your API key at <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI API Keys</a></div>
@@ -183,6 +217,9 @@
                                 <div class="input-group mb-3">
                                     <input type="password" class="form-control" name="api_key" placeholder="Enter API Key"
                                            value="{{ api_keys.get('anthropic', '') }}" required>
+                                    <button class="btn btn-outline-secondary toggle-password" type="button">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
                                     <button class="btn btn-primary" type="submit">Save</button>
                                 </div>
                                 <div class="form-text small">Find your API key at <a href="https://console.anthropic.com/keys" target="_blank">Anthropic Console</a></div>
@@ -208,6 +245,9 @@
                                 <div class="input-group mb-3">
                                     <input type="password" class="form-control" name="api_key" placeholder="Enter API Key"
                                            value="{{ api_keys.get('huggingface', '') }}" required>
+                                    <button class="btn btn-outline-secondary toggle-password" type="button">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
                                     <button class="btn btn-primary" type="submit">Save</button>
                                 </div>
                                 <div class="form-text small">Find your API key at <a href="https://huggingface.co/settings/tokens" target="_blank">Hugging Face Tokens</a></div>
@@ -282,4 +322,9 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Include model configuration management JavaScript -->
+<script src="{{ url_for('static', filename='js/model_config.js') }}"></script>
 {% endblock %}

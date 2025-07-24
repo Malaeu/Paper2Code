@@ -35,6 +35,12 @@
                         <a href="#" class="list-group-item list-group-item-action">
                             <i class="bi bi-key-fill me-2"></i> Manage API Keys
                         </a>
+                        <a href="{{ url_for('auth.activity') }}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-clock-history me-2"></i> Activity Log
+                        </a>
+                        <button type="button" class="list-group-item list-group-item-action text-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                            <i class="bi bi-trash me-2"></i> Delete Account
+                        </button>
                     </div>
                 </div>
             </div>
@@ -128,6 +134,44 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('auth.delete_account') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteAccountModalLabel">Delete Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>Warning:</strong> Deleting your account is permanent and cannot be undone.
+                    </div>
+                    
+                    <p>All of your data, including projects, configurations, and API usage history will be permanently deleted. This action cannot be reversed.</p>
+                    
+                    <div class="mb-3">
+                        <label for="delete_confirmation" class="form-label">To confirm, type "DELETE" in the box below:</label>
+                        <input type="text" class="form-control" id="delete_confirmation" name="delete_confirmation" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Current Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                        <div class="form-text">For security, please enter your current password to confirm this action.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete Account</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

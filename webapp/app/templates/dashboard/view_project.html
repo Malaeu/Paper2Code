@@ -125,9 +125,12 @@
                                             <div>
                                                 <h6 class="mb-0">Generated Code</h6>
                                                 <p class="mb-0">
-                                                    <a href="#" class="btn btn-sm btn-outline-primary mt-2">
-                                                        <i class="bi bi-download me-2"></i> Download Code
-                                                    </a>
+                                                    <button class="btn btn-sm btn-outline-primary mt-2 export-btn" 
+                                                            data-project-id="{{ project.id }}"
+                                                            data-bs-toggle="tooltip"
+                                                            title="Export project files as a ZIP archive">
+                                                        <i class="bi bi-download me-2"></i> Download as ZIP
+                                                    </button>
                                                 </p>
                                             </div>
                                         </div>
@@ -224,6 +227,12 @@
                     </form>
                     {% endif %}
                     
+                    {% if project.output_path %}
+                    <button class="list-group-item list-group-item-action export-btn" data-project-id="{{ project.id }}">
+                        <i class="bi bi-file-earmark-zip me-2"></i> Export Project
+                    </button>
+                    {% endif %}
+                    
                     <a href="#" class="list-group-item list-group-item-action">
                         <i class="bi bi-files me-2"></i> Duplicate Project
                     </a>
@@ -256,13 +265,62 @@
         </div>
     </div>
 </div>
+
+<!-- Export Project Modal -->
+<div class="modal fade" id="exportProjectModal" tabindex="-1" aria-labelledby="exportProjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exportProjectModalLabel">Export Project</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Export <strong>{{ project.name }}</strong> as a zip file containing:</p>
+                <ul>
+                    <li>Generated code output</li>
+                    <li>Paper file (PDF)</li>
+                    <li>Planning and configuration files</li>
+                    <li>Project metadata</li>
+                </ul>
+                
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="" id="includeLogsCheck" checked>
+                    <label class="form-check-label" for="includeLogsCheck">
+                        Include log files
+                    </label>
+                </div>
+                
+                <div id="exportStatus" class="mt-3 d-none">
+                    <div class="d-flex align-items-center">
+                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <span id="exportStatusText">Exporting project...</span>
+                    </div>
+                </div>
+                
+                <div id="exportError" class="alert alert-danger mt-3 d-none"></div>
+                <div id="exportSuccess" class="alert alert-success mt-3 d-none"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button id="startExportBtn" type="button" class="btn btn-primary" data-project-id="{{ project.id }}">
+                    <i class="bi bi-file-earmark-zip me-2"></i> Export
+                </button>
+                <a id="downloadExportBtn" href="#" class="btn btn-success d-none">
+                    <i class="bi bi-download me-2"></i> Download
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    // Only run the polling if the project is in a processing state
-    {% if project.status.value in ['processing', 'planning', 'analyzing', 'coding'] %}
-        document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        // Only run the polling if the project is in a processing state
+        {% if project.status.value in ['processing', 'planning', 'analyzing', 'coding'] %}
             // Elements to update
             const progressBar = document.querySelector('.progress-bar');
             const statusBadge = document.querySelector('.badge.bg-{{ project.get_status_color() }}');
@@ -310,7 +368,104 @@
                         console.error('Error polling project status:', error);
                     });
             }
+        {% endif %}
+        
+        // Project Export Functionality
+        const exportButtons = document.querySelectorAll('.export-btn');
+        const exportModal = new bootstrap.Modal(document.getElementById('exportProjectModal'));
+        const startExportBtn = document.getElementById('startExportBtn');
+        const downloadExportBtn = document.getElementById('downloadExportBtn');
+        const includeLogsCheck = document.getElementById('includeLogsCheck');
+        const exportStatus = document.getElementById('exportStatus');
+        const exportStatusText = document.getElementById('exportStatusText');
+        const exportError = document.getElementById('exportError');
+        const exportSuccess = document.getElementById('exportSuccess');
+        
+        // Initialize tooltips
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+        
+        // Show export modal when export button is clicked
+        exportButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const projectId = button.getAttribute('data-project-id');
+                startExportBtn.setAttribute('data-project-id', projectId);
+                
+                // Reset modal state
+                exportStatus.classList.add('d-none');
+                exportError.classList.add('d-none');
+                exportSuccess.classList.add('d-none');
+                downloadExportBtn.classList.add('d-none');
+                startExportBtn.classList.remove('d-none');
+                
+                // Show the modal
+                exportModal.show();
+            });
         });
-    {% endif %}
+        
+        // Handle export initiation
+        startExportBtn.addEventListener('click', () => {
+            const projectId = startExportBtn.getAttribute('data-project-id');
+            const includeLogs = includeLogsCheck.checked;
+            
+            // Show export status
+            exportStatus.classList.remove('d-none');
+            exportError.classList.add('d-none');
+            exportSuccess.classList.add('d-none');
+            startExportBtn.disabled = true;
+            
+            // Make the API request
+            fetch(`/api/projects/${projectId}/export`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ include_logs: includeLogs })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Show success message
+                    exportSuccess.textContent = data.message;
+                    exportSuccess.classList.remove('d-none');
+                    
+                    // Hide spinner
+                    exportStatus.classList.add('d-none');
+                    
+                    // Show download button
+                    downloadExportBtn.href = data.data.download_url;
+                    downloadExportBtn.classList.remove('d-none');
+                    startExportBtn.classList.add('d-none');
+                    
+                    // Add file size to success message
+                    if (data.data.export_size) {
+                        exportSuccess.innerHTML += `<br>File size: ${data.data.export_size}`;
+                    }
+                } else {
+                    // Show error message
+                    exportError.textContent = data.message || 'Error exporting project';
+                    exportError.classList.remove('d-none');
+                    exportStatus.classList.add('d-none');
+                    startExportBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error exporting project:', error);
+                exportError.textContent = 'Error exporting project: Network or server error';
+                exportError.classList.remove('d-none');
+                exportStatus.classList.add('d-none');
+                startExportBtn.disabled = false;
+            });
+        });
+        
+        // Handle download button click
+        downloadExportBtn.addEventListener('click', () => {
+            // Close the modal after download starts
+            setTimeout(() => {
+                exportModal.hide();
+            }, 500);
+        });
+    });
 </script>
 {% endblock %}

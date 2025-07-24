@@ -22,8 +22,8 @@ psycopg2-binary==2.9.9  # For PostgreSQL
 werkzeug==2.3.7
 PyPDF2==3.0.1
 python-docx==1.0.1
-pymupdf==1.23.4  # For PDF handling
-pandas==2.1.0  # For dataset manipulation
+pymupdf>=1.24.3 # For PDF handling
+pandas>=2.2.0  # For dataset manipulation
 pyarrow==14.0.1  # For Parquet support
 openpyxl==3.1.2  # For Excel support
 pillow==10.0.1  # For image processing

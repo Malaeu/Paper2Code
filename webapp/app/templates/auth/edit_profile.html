@@ -34,8 +34,13 @@
                         
                         <div class="mb-3">
                             <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email" value="{{ current_user.email }}" disabled>
-                            <div class="form-text">Email cannot be changed. Contact administrator if needed.</div>
+                            <div class="input-group">
+                                <input type="email" class="form-control" id="email" name="email" value="{{ current_user.email }}" readonly>
+                                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#changeEmailModal">
+                                    Change Email
+                                </button>
+                            </div>
+                            <div class="form-text">Your current email address. Use the Change Email button to update it.</div>
                         </div>
                         
                         <div class="d-grid gap-2">
@@ -45,6 +50,44 @@
                     </form>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Change Email Modal -->
+<div class="modal fade" id="changeEmailModal" tabindex="-1" aria-labelledby="changeEmailModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('auth.change_email') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="changeEmailModalLabel">Change Email Address</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="current_email" class="form-label">Current Email</label>
+                        <input type="email" class="form-control" id="current_email" value="{{ current_user.email }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_email" class="form-label">New Email</label>
+                        <input type="email" class="form-control" id="new_email" name="new_email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Current Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                        <div class="form-text">For security, please enter your current password to confirm this change.</div>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        A verification email will be sent to your new address. Your email will not be updated until you verify the new address.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Request Change</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
