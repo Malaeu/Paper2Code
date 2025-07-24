@@ -25,21 +25,18 @@ echo "------- Copying Paper -------"
 cp "$PDF_PATH" "${CUSTOM_DIR}/paper.pdf"
 PDF_PATH="${CUSTOM_DIR}/paper.pdf"
 
-# First, we need to run the GROBID service to process PDF
-echo "------- Starting GROBID -------"
-echo "IMPORTANT: Make sure GROBID is running in another terminal with the command:"
-echo "cd \$HOME/grobid-0.7.3 && ./gradlew run"
-echo "Press Enter when GROBID is running..."
-read -p ""
+# Process PDF with MinerU (replaces GROBID)
+echo "------- Processing PDF with MinerU -------"
+echo "Using MinerU for advanced OCR and layout analysis (no GROBID needed)..."
 
-echo "------- Processing PDF -------"
-cd /Users/Lordof44/Documents/GitHub/Paper2Code
-source paper2code_env/bin/activate
-python s2orc-doc2json/doc2json/grobid2json/process_pdf.py -i "$PDF_PATH" -t "${CUSTOM_DIR}/temp_dir/" -o "${CUSTOM_DIR}/"
+python codes/mineru_processor.py \
+    --pdf_path "$PDF_PATH" \
+    --output_dir "${CUSTOM_DIR}/mineru_output" \
+    --json_output ${PDF_JSON_PATH}
 
 # Check if PDF processing was successful
 if [ ! -f "${PDF_JSON_PATH}" ]; then
-    echo "ERROR: PDF processing failed. Make sure GROBID is running properly."
+    echo "ERROR: MinerU PDF processing failed. Check the logs above."
     exit 1
 fi
 
@@ -48,23 +45,29 @@ python codes/0_pdf_process.py \
     --input_json_path ${PDF_JSON_PATH} \
     --output_json_path ${PDF_JSON_CLEANED_PATH}
 
-echo "------- Extracting Figures and Getting LLM Descriptions -------"
-# Install PyMuPDF if not already installed
-pip install PyMuPDF
-
-# Run the figure extraction script
-python codes/extract_figures.py \
-    --pdf_path "$PDF_PATH" \
-    --json_path ${PDF_JSON_CLEANED_PATH} \
-    --output_dir ${CUSTOM_DIR} \
-    --gpt_version ${IMAGE_GPT_VERSION}
-
-# Use the enhanced JSON for the rest of the pipeline
-if [ -f "$ENHANCED_JSON_PATH" ]; then
-    echo "Using enhanced JSON with figure descriptions"
-    PDF_JSON_CLEANED_PATH=${ENHANCED_JSON_PATH}
+# Enhance images with Gemini Vision if API key is available
+if [ ! -z "$GEMINI_API_KEY" ]; then
+    echo "------- Enhancing Images with Gemini Vision -------"
+    
+    # Install google-generativeai if not already installed
+    pip install google-generativeai
+    
+    # Enhance images with detailed descriptions using MinerU extracted images
+    python codes/mineru_image_enhancer.py \
+        --input ${PDF_JSON_CLEANED_PATH} \
+        --images_dir "${CUSTOM_DIR}/mineru_output" \
+        --output ${ENHANCED_JSON_PATH} \
+        --format paper2code
+    
+    # Use the enhanced JSON for the rest of the pipeline
+    if [ -f "$ENHANCED_JSON_PATH" ]; then
+        echo "Using enhanced JSON with Gemini Vision descriptions"
+        PDF_JSON_CLEANED_PATH=${ENHANCED_JSON_PATH}
+    else
+        echo "WARNING: Gemini Vision enhancement failed, using regular cleaned JSON"
+    fi
 else
-    echo "WARNING: Enhanced JSON not found, using regular cleaned JSON"
+    echo "GEMINI_API_KEY not set, skipping image enhancement"
 fi
 
 echo "------- PaperCoder -------"

@@ -108,32 +108,67 @@ class PipelineService:
                 format='[%(asctime)s] %(levelname)s: %(message)s'
             )
             
-            # First, we need to convert the PDF to JSON using grobid
-            # This would typically be done via the doc2json/grobid2json/process_pdf.py script
-            # For now, we'll simulate this by creating a dummy JSON file
+            # Process PDF using MinerU (replaces GROBID)
+            logging.info("Processing PDF with MinerU...")
             
-            # In a real implementation, you would call the grobid script like:
-            # subprocess.run(['python', 'doc2json/grobid2json/process_pdf.py', 
-            #                '-i', paths['paper_path'], 
-            #                '-o', os.path.dirname(paths['pdf_json_path'])])
+            mineru_processor_path = os.path.join(current_app.config['PROJECT_ROOT'], 'codes', 'mineru_processor.py')
+            mineru_output_dir = os.path.join(os.path.dirname(paths['pdf_json_path']), 'mineru_output')
             
-            # For testing, create dummy JSON data
-            dummy_json = {
-                "paper_id": f"project_{project.id}",
-                "metadata": {
-                    "title": project.name,
-                    "abstract": "This is a dummy abstract for testing."
-                },
-                "abstract": [
-                    {"text": "This is a dummy abstract for testing."}
-                ],
-                "body_text": [
-                    {"text": "This is a dummy body text for testing."}
+            # Run MinerU processor
+            mineru_command = [
+                'python', mineru_processor_path,
+                '--pdf_path', paths['paper_path'],
+                '--output_dir', mineru_output_dir,
+                '--json_output', paths['pdf_json_path']
+            ]
+            
+            logging.info(f"Running MinerU command: {' '.join(mineru_command)}")
+            
+            mineru_result = subprocess.run(
+                mineru_command,
+                capture_output=True,
+                text=True,
+                timeout=600  # 10 minutes timeout
+            )
+            
+            if mineru_result.returncode != 0:
+                logging.error(f"MinerU processing failed: {mineru_result.stderr}")
+                raise RuntimeError(f"MinerU processing failed: {mineru_result.stderr}")
+            
+            logging.info(f"MinerU processing completed: {mineru_result.stdout}")
+            
+            # Enhance with Gemini Vision if API key is available
+            enhanced_json_path = paths['pdf_json_path'].replace('.json', '_enhanced.json')
+            gemini_api_key = os.environ.get('GEMINI_API_KEY')
+            
+            if gemini_api_key:
+                logging.info("Enhancing images with Gemini Vision...")
+                
+                image_enhancer_path = os.path.join(current_app.config['PROJECT_ROOT'], 'codes', 'mineru_image_enhancer.py')
+                
+                enhance_command = [
+                    'python', image_enhancer_path,
+                    '--input', paths['pdf_json_path'],
+                    '--images_dir', mineru_output_dir,
+                    '--output', enhanced_json_path,
+                    '--format', 'paper2code'
                 ]
-            }
-            
-            with open(paths['pdf_json_path'], 'w') as f:
-                json.dump(dummy_json, f)
+                
+                enhance_result = subprocess.run(
+                    enhance_command,
+                    capture_output=True,
+                    text=True,
+                    timeout=300  # 5 minutes timeout
+                )
+                
+                if enhance_result.returncode == 0 and os.path.exists(enhanced_json_path):
+                    logging.info("Gemini Vision enhancement completed successfully")
+                    # Use enhanced JSON for further processing
+                    paths['pdf_json_path'] = enhanced_json_path
+                else:
+                    logging.warning(f"Gemini Vision enhancement failed: {enhance_result.stderr}")
+            else:
+                logging.info("GEMINI_API_KEY not set, skipping image enhancement")
             
             # Now run the 0_pdf_process.py script
             script_path = os.path.join(current_app.config['PROJECT_ROOT'], 'codes', '0_pdf_process.py')

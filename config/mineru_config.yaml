@@ -1,0 +1,226 @@
+# MinerU Configuration for Paper2Code Integration
+# This file configures MinerU processing settings for optimal Paper2Code compatibility
+
+# MinerU Installation Settings
+mineru:
+  # Path to MinerU installation directory
+  installation_path: "/media/chirurgie/hdd01/Soft/GitHub/MinerU"
+  
+  # Path to MinerU virtual environment
+  venv_path: "/media/chirurgie/hdd01/Soft/GitHub/MinerU/.venv"
+  
+  # Processing method: 'ocr' for OCR-based processing, 'auto' for automatic selection
+  method: "ocr"
+  
+  # Timeout for processing (seconds)
+  timeout: 600
+  
+  # Output formats to generate
+  output_formats:
+    - "md"
+    - "json"
+    - "images"
+  
+  # Quality settings
+  quality:
+    # Image DPI for extraction
+    image_dpi: 300
+    
+    # Maximum image size (MB)
+    max_image_size: 20
+    
+    # OCR language (for PaddleOCR)
+    ocr_language: "en"
+
+# Gemini Vision Enhancement Settings
+gemini:
+  # Gemini model to use for image analysis
+  model: "gemini-2.0-flash-exp"
+  
+  # Enable automatic image enhancement
+  vision_enhancement: true
+  
+  # Generation configuration
+  generation_config:
+    temperature: 0.1
+    top_p: 0.8
+    top_k: 40
+    max_output_tokens: 1000
+  
+  # Rate limiting (seconds between requests)
+  rate_limit_delay: 0.5
+  
+  # Maximum image size for Gemini (MB)
+  max_image_size: 20
+  
+  # Retry configuration
+  max_retries: 3
+  retry_delay: 2
+
+# Paper2Code Integration Settings
+paper2code:
+  # Temporary directories
+  temp_dir: "temp"
+  
+  # Output directory structure
+  output_structure:
+    mineru_output: "mineru_output"
+    images: "images"
+    tables: "tables"
+    formulas: "formulas"
+  
+  # JSON conversion settings
+  json_conversion:
+    # Include MinerU metadata in output
+    include_metadata: true
+    
+    # Clean reference spans
+    clean_spans: true
+    
+    # Validate Paper2Code format
+    validate_format: true
+  
+  # Content processing
+  content_processing:
+    # Minimum text length for sections
+    min_section_length: 10
+    
+    # Maximum reference distance for linking
+    max_ref_distance: 500
+    
+    # Enable automatic section detection
+    auto_section_detection: true
+
+# Advanced Processing Settings
+processing:
+  # Table processing
+  tables:
+    # Enable HTML table processing
+    process_html: true
+    
+    # Export formats
+    export_formats:
+      - "csv"
+      - "json"
+    
+    # Minimum table size (rows x cols)
+    min_table_size: [2, 2]
+  
+  # Formula processing
+  formulas:
+    # Enable LaTeX parsing
+    parse_latex: true
+    
+    # Enable SymPy integration (if available)
+    use_sympy: true
+    
+    # Complexity calculation
+    calculate_complexity: true
+    
+    # Generate LaTeX compilation file
+    generate_latex_file: true
+  
+  # Image processing
+  images:
+    # Enhance with Gemini Vision
+    enhance_with_gemini: true
+    
+    # Generate image analysis
+    generate_analysis: true
+    
+    # Save original images
+    save_originals: true
+    
+    # Supported formats
+    supported_formats:
+      - "jpg"
+      - "jpeg"
+      - "png"
+      - "pdf"
+
+# Logging Configuration
+logging:
+  # Log level (DEBUG, INFO, WARNING, ERROR)
+  level: "INFO"
+  
+  # Log format
+  format: "[%(asctime)s] %(levelname)s - %(name)s: %(message)s"
+  
+  # Enable file logging
+  file_logging: true
+  
+  # Log file path (relative to output directory)
+  log_file: "mineru_processing.log"
+  
+  # Maximum log file size (MB)
+  max_log_size: 10
+  
+  # Number of backup log files
+  backup_count: 5
+
+# Performance Settings
+performance:
+  # Enable multiprocessing (if supported)
+  multiprocessing: false
+  
+  # Number of worker processes
+  num_workers: 1
+  
+  # Memory limit per process (MB)
+  memory_limit: 4096
+  
+  # Enable GPU acceleration (if available)
+  use_gpu: true
+  
+  # GPU memory fraction
+  gpu_memory_fraction: 0.8
+
+# Error Handling
+error_handling:
+  # Continue on non-critical errors
+  continue_on_error: true
+  
+  # Maximum retries for failed operations
+  max_retries: 3
+  
+  # Fallback options
+  fallback_options:
+    # Use GROBID if MinerU fails
+    use_grobid_fallback: false
+    
+    # Skip image enhancement on failure
+    skip_enhancement_on_error: true
+    
+    # Use basic table extraction if HTML parsing fails
+    basic_table_extraction: true
+
+# Compatibility Settings
+compatibility:
+  # Paper2Code version compatibility
+  paper2code_version: "latest"
+  
+  # Enable legacy GROBID format support
+  legacy_grobid_support: true
+  
+  # Preserve original file structure
+  preserve_structure: false
+  
+  # Enable backward compatibility mode
+  backward_compatibility: false
+
+# Development Settings (for testing and debugging)
+development:
+  # Enable debug mode
+  debug_mode: false
+  
+  # Save intermediate files
+  save_intermediates: false
+  
+  # Enable profiling
+  enable_profiling: false
+  
+  # Verbose output
+  verbose: false
+  
+  # Test mode (use dummy data)
+  test_mode: false

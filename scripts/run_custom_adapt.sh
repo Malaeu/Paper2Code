@@ -29,48 +29,45 @@ echo "Creating adaptation from $PAPER_NAME to $ADAPTED_NAME"
 
 # First, check if paper JSON already exists, otherwise process paper
 if [ ! -f "$PAPER_JSON_CLEANED_PATH" ]; then
-    echo "------- Processing Original Paper -------"
+    echo "------- Processing Original Paper with MinerU -------"
     
-    # Check if GROBID is running
-    echo "IMPORTANT: Make sure GROBID is running in another terminal with the command:"
-    echo "cd \$HOME/grobid-0.7.3 && ./gradlew run"
-    echo "Press Enter when GROBID is running..."
-    read -p ""
+    # Process PDF with MinerU (replaces GROBID)
+    echo "Processing PDF with MinerU (advanced OCR and layout analysis)..."
+    python codes/mineru_processor.py \
+        --pdf_path "$PAPER_PDF_PATH" \
+        --output_dir custom_paper/mineru_output \
+        --json_output ${PAPER_JSON_PATH}
     
-    # Process PDF to JSON
-    cd /Users/Lordof44/Documents/GitHub/Paper2Code
-    source paper2code_env/bin/activate
-    python s2orc-doc2json/doc2json/grobid2json/process_pdf.py -i "$PAPER_PDF_PATH" -t custom_paper/temp_dir/ -o custom_paper/
-    
-    # Preprocess
+    # Preprocess the MinerU JSON output
     python codes/0_pdf_process.py \
         --input_json_path ${PAPER_JSON_PATH} \
         --output_json_path ${PAPER_JSON_CLEANED_PATH}
     
-    # Extract figures if not already done
-    if [ ! -f "$PAPER_ENHANCED_JSON_PATH" ]; then
-        echo "------- Extracting Figures and Getting LLM Descriptions -------"
-        # Install PyMuPDF if not already installed
-        pip install PyMuPDF
+    # Enhance images with Gemini Vision if API key is available
+    if [ ! -z "$GEMINI_API_KEY" ] && [ ! -f "$PAPER_ENHANCED_JSON_PATH" ]; then
+        echo "------- Enhancing Images with Gemini Vision -------"
         
-        # Run the figure extraction script
-        python codes/extract_figures.py \
-            --pdf_path "$PAPER_PDF_PATH" \
-            --json_path ${PAPER_JSON_CLEANED_PATH} \
-            --output_dir custom_paper \
-            --gpt_version ${IMAGE_GPT_VERSION}
+        # Install google-generativeai if not already installed
+        pip install google-generativeai
+        
+        # Enhance images with detailed descriptions
+        python codes/mineru_image_enhancer.py \
+            --input ${PAPER_JSON_CLEANED_PATH} \
+            --images_dir custom_paper/mineru_output \
+            --output ${PAPER_ENHANCED_JSON_PATH} \
+            --format paper2code
     fi
     
     # Use the enhanced JSON if available
     if [ -f "$PAPER_ENHANCED_JSON_PATH" ]; then
-        echo "Using enhanced JSON with figure descriptions"
+        echo "Using enhanced JSON with Gemini Vision descriptions"
         PAPER_JSON_CLEANED_PATH=${PAPER_ENHANCED_JSON_PATH}
     fi
 else
     echo "------- Using existing processed paper -------"
     # Use the enhanced JSON if available
     if [ -f "$PAPER_ENHANCED_JSON_PATH" ]; then
-        echo "Using enhanced JSON with figure descriptions"
+        echo "Using enhanced JSON with Gemini Vision descriptions"
         PAPER_JSON_CLEANED_PATH=${PAPER_ENHANCED_JSON_PATH}
     fi
 fi
