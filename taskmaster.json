@@ -1,0 +1,33 @@
+{
+  "project": {
+    "name": "Paper2Code",
+    "description": "A system for automating code generation from scientific papers in machine learning",
+    "rootDir": "/media/chirurgie/hdd01/Soft/GitHub/Paper2Code"
+  },
+  "tasks": [
+    {
+      "id": "desktop-app",
+      "name": "Create Desktop Application",
+      "description": "Develop an Electron-based desktop GUI for Paper2Code",
+      "status": "pending"
+    },
+    {
+      "id": "dependency-installer",
+      "name": "Automatic Dependency Installation",
+      "description": "Implement automatic installation of OpenAI, vLLM, GROBID, etc.",
+      "status": "pending"
+    },
+    {
+      "id": "variable-mapping",
+      "name": "Visual Variable Mapping Interface",
+      "description": "Create an interactive interface for mapping paper variables to dataset variables",
+      "status": "pending"
+    },
+    {
+      "id": "dockerize",
+      "name": "Containerize Web Interface",
+      "description": "Create Docker setup for easy deployment of the web interface",
+      "status": "pending"
+    }
+  ]
+}

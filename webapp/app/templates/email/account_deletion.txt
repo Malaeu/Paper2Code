@@ -1,0 +1,19 @@
+ACCOUNT DELETION CONFIRMATION - PAPER2CODE
+
+Hello {{ username }},
+
+We're sorry to see you go. This email confirms that your Paper2Code account has been permanently deleted.
+
+All of your personal data and associated information has been removed from our system as per our privacy policy.
+
+If you deleted your account by mistake or would like to create a new account in the future, you can always register again on our website.
+
+If you have any feedback or concerns about our service, we'd love to hear from you. You can reply to this email to share your thoughts.
+
+Thank you for having been a part of the Paper2Code community.
+
+Best regards,
+The Paper2Code Team
+
+---
+This email was sent by Paper2Code. If you have any questions, please contact support.

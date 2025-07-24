@@ -1,0 +1,36 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir flask celery redis gunicorn
+
+# Copy application code
+COPY . .
+
+# Set environment variables
+ENV FLASK_APP=webapp.app
+ENV FLASK_ENV=production
+ENV PORT=5000
+
+# Create necessary directories
+RUN mkdir -p /app/webapp/uploads/papers
+RUN mkdir -p /app/webapp/uploads/datasets
+RUN mkdir -p /app/webapp/uploads/outputs
+
+# Expose the port
+EXPOSE 5000
+
+# Command to run the application
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "webapp.app:app"]

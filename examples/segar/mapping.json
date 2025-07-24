@@ -1,0 +1,29 @@
+{
+    "original_to_adapted": {
+        "age": "age",
+        "sex": "gender",
+        "body_mass_index": "bmi",
+        "smoking_status": "smoker",
+        "history_of_diabetes": "diabetes",
+        "history_of_hypertension": "hypertension",
+        "natriuretic_peptide_level": "blood_marker_a",
+        "cardiac_troponin_level": "blood_marker_b",
+        "incident_heart_failure": "outcome"
+    },
+    "category_mappings": {
+        "gender": {
+            "Male": "male",
+            "Female": "female"
+        },
+        "smoker": {
+            "Smoker": 1,
+            "Non-smoker": 0
+        }
+    },
+    "adapted_dataset_path": "/media/chirurgie/hdd01/Soft/GitHub/Paper2Code/examples/segar/data.csv",
+    "adapted_dataset_format": "csv",
+    "methodology_adjustments": {
+        "maintain_key_analysis_feature": true,
+        "iterations": 1000
+    }
+}

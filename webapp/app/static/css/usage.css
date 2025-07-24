@@ -1,0 +1,73 @@
+/**
+ * Custom CSS for the usage dashboard
+ */
+
+/* Progress bar colors */
+.bg-1 {
+    background-color: #007bff;
+}
+.bg-2 {
+    background-color: #28a745;
+}
+.bg-3 {
+    background-color: #dc3545;
+}
+.bg-4 {
+    background-color: #ffc107;
+}
+.bg-5 {
+    background-color: #17a2b8;
+}
+.bg-6 {
+    background-color: #6c757d;
+}
+
+/* Chart container */
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+
+/* Card hover effects */
+.card-hover {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Animated stats */
+.stat-number {
+    transition: color 0.3s ease;
+}
+.stat-number:hover {
+    color: #007bff;
+}
+
+/* Pill badges for model names */
+.model-badge {
+    border-radius: 50rem;
+    padding: 0.35em 0.65em;
+    font-size: 0.75em;
+    font-weight: 700;
+    display: inline-block;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Custom purple color */
+.text-purple {
+    color: #6f42c1;
+}
+.bg-purple {
+    background-color: #6f42c1;
+}
+.btn-purple {
+    background-color: #6f42c1;
+    color: white;
+}
+.btn-purple:hover {
+    background-color: #5a32a3;
+    color: white;
+}

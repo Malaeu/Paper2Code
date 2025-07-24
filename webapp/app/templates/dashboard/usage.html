@@ -1,0 +1,352 @@
+{% extends "base.html" %}
+
+{% block title %}Usage Dashboard - Paper2Code{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Dashboard Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Usage & Costs</h1>
+        <div>
+            <a href="{{ url_for('dashboard.settings') }}" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-gear me-2"></i> Settings
+            </a>
+            <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Usage Summary Cards -->
+    <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
+        <!-- Total API Calls -->
+        <div class="col">
+            <div class="card h-100 border-0 bg-light">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-primary bg-opacity-10 p-3 rounded-3 me-3">
+                            <i class="bi bi-arrow-repeat fs-3 text-primary"></i>
+                        </div>
+                        <h5 class="card-title mb-0">API Calls</h5>
+                    </div>
+                    <h2 class="display-6 mb-0">{{ summary.total_api_calls | default(0) | number_format }}</h2>
+                    <p class="text-muted">Total API requests</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Total Tokens -->
+        <div class="col">
+            <div class="card h-100 border-0 bg-light">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-success bg-opacity-10 p-3 rounded-3 me-3">
+                            <i class="bi bi-chat-square-text fs-3 text-success"></i>
+                        </div>
+                        <h5 class="card-title mb-0">Tokens</h5>
+                    </div>
+                    <h2 class="display-6 mb-0">{{ summary.total_tokens | default(0) | number_format }}</h2>
+                    <p class="text-muted">Total tokens processed</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Total Cost -->
+        <div class="col">
+            <div class="card h-100 border-0 bg-light">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-danger bg-opacity-10 p-3 rounded-3 me-3">
+                            <i class="bi bi-currency-dollar fs-3 text-danger"></i>
+                        </div>
+                        <h5 class="card-title mb-0">Cost</h5>
+                    </div>
+                    <h2 class="display-6 mb-0">${{ summary.total_cost | default(0) | round(2) }}</h2>
+                    <p class="text-muted">Estimated total cost</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Models Used -->
+        <div class="col">
+            <div class="card h-100 border-0 bg-light">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-info bg-opacity-10 p-3 rounded-3 me-3">
+                            <i class="bi bi-robot fs-3 text-info"></i>
+                        </div>
+                        <h5 class="card-title mb-0">Models</h5>
+                    </div>
+                    <h2 class="display-6 mb-0">{{ summary.model_count | default(0) }}</h2>
+                    <p class="text-muted">AI models used</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Usage Tabs -->
+    <div class="card shadow">
+        <div class="card-header bg-white">
+            <ul class="nav nav-tabs card-header-tabs" id="usageTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">
+                        <i class="bi bi-pie-chart me-2"></i>Overview
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="models-tab" data-bs-toggle="tab" data-bs-target="#models" type="button" role="tab" aria-controls="models" aria-selected="false">
+                        <i class="bi bi-robot me-2"></i>Models
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">
+                        <i class="bi bi-clock-history me-2"></i>History
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="estimate-tab" data-bs-toggle="tab" data-bs-target="#estimate" type="button" role="tab" aria-controls="estimate" aria-selected="false">
+                        <i class="bi bi-calculator me-2"></i>Cost Estimator
+                    </button>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content" id="usageTabsContent">
+                <!-- Overview Tab -->
+                <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Daily Usage</h5>
+                            <div id="dailyUsageChart" style="height: 300px;" class="mb-4">
+                                <div class="d-flex justify-content-center align-items-center h-100">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Provider Breakdown</h5>
+                            <div id="providerChart" style="height: 300px;" class="mb-4">
+                                <div class="d-flex justify-content-center align-items-center h-100">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h5 class="mb-3">API Keys Usage</h5>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Service</th>
+                                    <th>Key Name</th>
+                                    <th>Calls</th>
+                                    <th>Tokens</th>
+                                    <th>Cost</th>
+                                    <th>Last Used</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if stats.api_keys %}
+                                    {% for key in stats.api_keys %}
+                                        <tr>
+                                            <td>{{ key.service }}</td>
+                                            <td>{{ key.key_name }}</td>
+                                            <td>{{ key.calls_count | default(0) }}</td>
+                                            <td>{{ key.tokens_used | default(0) | number_format }}</td>
+                                            <td>${{ key.estimated_cost | default(0) | round(2) }}</td>
+                                            <td>{{ key.last_used | default('Never') }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="6" class="text-center">No API keys usage data available</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Models Tab -->
+                <div class="tab-pane fade" id="models" role="tabpanel" aria-labelledby="models-tab">
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div id="modelDistributionChart" style="height: 250px;">
+                                <div class="d-flex justify-content-center align-items-center h-100">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div id="modelUsageChart" style="height: 250px;">
+                                <div class="d-flex justify-content-center align-items-center h-100">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h5 class="mb-3">Model Usage Details</h5>
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="modelsTable">
+                            <thead>
+                                <tr>
+                                    <th>Model</th>
+                                    <th>Provider</th>
+                                    <th>Tokens Used</th>
+                                    <th>Cost</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if stats.models %}
+                                    {% for model in stats.models %}
+                                        <tr>
+                                            <td>{{ model.display_name }}</td>
+                                            <td>{{ model.provider_display }}</td>
+                                            <td>{{ model.tokens_used | default(0) | number_format }}</td>
+                                            <td>${{ model.cost | default(0) | round(2) }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center">No model usage data available</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- History Tab -->
+                <div class="tab-pane fade" id="history" role="tabpanel" aria-labelledby="history-tab">
+                    <div class="mb-3">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label for="historyStartDate" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="historyStartDate">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="historyEndDate" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="historyEndDate">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="historyService" class="form-label">Service</label>
+                                <select class="form-select" id="historyService">
+                                    <option value="">All Services</option>
+                                    <option value="openai">OpenAI</option>
+                                    <option value="anthropic">Anthropic</option>
+                                    <option value="google">Google AI</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button type="button" class="btn btn-primary w-100" id="loadHistoryBtn">
+                                    <i class="bi bi-filter me-2"></i>Apply Filters
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="historyTable" class="table-responsive">
+                        <div class="d-flex justify-content-center p-5">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary mb-3" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p>Loading usage history...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Cost Estimator Tab -->
+                <div class="tab-pane fade" id="estimate" role="tabpanel" aria-labelledby="estimate-tab">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Cost Estimator</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form id="costEstimatorForm">
+                                        <div class="mb-3">
+                                            <label for="estimator-model" class="form-label">Model</label>
+                                            <select class="form-select" id="estimator-model" required>
+                                                <option value="" selected disabled>Select a model</option>
+                                                {% for model in stats.models %}
+                                                    <option 
+                                                        value="{{ model.model_id }}" 
+                                                        data-input-cost="{{ model.input_cost_per_1k_tokens|default(0.0) }}"
+                                                        data-output-cost="{{ model.output_cost_per_1k_tokens|default(0.0) }}">
+                                                        {{ model.display_name }} ({{ model.provider_display }})
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="estimator-input-tokens" class="form-label">Input Tokens</label>
+                                            <input type="number" class="form-control" id="estimator-input-tokens" value="1000" min="0" required>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="estimator-output-tokens" class="form-label">Output Tokens</label>
+                                            <input type="number" class="form-control" id="estimator-output-tokens" value="500" min="0" required>
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-primary">Calculate Cost</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Estimated Cost</h5>
+                                </div>
+                                <div class="card-body" id="estimationResults">
+                                    <div class="text-center text-muted p-5">
+                                        <i class="bi bi-calculator fs-1 mb-3"></i>
+                                        <p>Select a model and enter token counts to calculate estimated cost.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script src="{{ url_for('static', filename='js/usage_dashboard.js') }}"></script>
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/usage.css') }}">
+{% endblock %}

@@ -1,0 +1,264 @@
+project_context:
+  original_paper_name: "Segar, M. W., Patel, K. V., Ayers, C., et al. (2021). Abstract 12115: Sex-Specific and Racial Differences in the Value of Cardiorespiratory Fitness as a Prognostic Marker Among Asymptomatic Adults Undergoing Cardiac Stress Testing. Circulation, 144(Suppl_1), A12115-A12115."
+  original_paper_focus: "Cardiorespiratory fitness and prognostic markers in asymptomatic adults, cardiovascular outcomes."
+  current_project_focus: "Identification of risk factors predicting mortality on the waiting list for liver transplantation using body composition and clinical data."
+  dataset_file_path: "examples/segar/fv_export.csv" # Relative to Paper2Code project root
+
+outcome_variable:
+  name_in_dataset: "surv_status"
+  description: "Patient status on the liver transplant waiting list (0 = censored/survived/transplanted, 1 = died on waiting list)."
+  type: "binary"
+  event_category_value: 1
+  event_category_label: "Died on waiting list"
+  censored_category_value: 0
+  censored_category_label: "Censored (transplanted, survived, or delisted)"
+  concept_in_original_paper: "Incident_HF_or_Event" # Conceptual analogy
+
+time_to_event_variable:
+  name_in_dataset: "surv_time_months"
+  description: "Time in months from listing to death on waiting list or censoring."
+  type: "continuous"
+  unit: "months"
+  concept_in_original_paper: "time_to_event" # Conceptual analogy
+
+predictor_variables:
+  # Demographic
+  - name_in_dataset: "age"
+    description: "Patient age at listing for liver transplantation."
+    type: "continuous"
+    unit: "years"
+    group: "demographic"
+    role_in_analysis: "Baseline demographic characteristic."
+    concept_in_original_paper: "age"
+
+  - name_in_dataset: "sex"
+    description: "Patient's biological sex."
+    type: "categorical"
+    group: "demographic"
+    categories_in_dataset:
+      "M": "Male"
+      "W": "Female"
+    role_in_analysis: "Baseline demographic characteristic."
+    concept_in_original_paper_role_analogy: "Race" # If Segar used Race as a primary demographic stratifier
+
+  # Anthropometric
+  - name_in_dataset: "bmi_recalculated"
+    description: "Body Mass Index."
+    type: "continuous"
+    unit: "kg/m^2"
+    group: "anthropometric"
+    role_in_analysis: "Anthropometric measure."
+    concept_in_original_paper: "body_mass_index"
+
+  # Disease Severity
+  - name_in_dataset: "meld_listing"
+    description: "Model for End-Stage Liver Disease score at the time of listing."
+    type: "continuous"
+    unit: "score"
+    group: "disease_severity"
+    role_in_analysis: "Severity of liver disease, key predictor in LTx."
+    concept_in_original_paper: null
+    processing_notes: "Consider log-transformation if distribution is skewed."
+
+  # Body Composition - Native Volumes
+  - name_in_dataset: "bone"
+    description: "BONE (Bone tissue volume, cm³)"
+    type: "continuous"
+    unit: "cm³"
+    group: "body_composition_volume_native"
+    role_in_analysis: "Native bone tissue volume."
+    concept_in_original_paper: null
+
+  - name_in_dataset: "muscle"
+    description: "MUSCLE (Muscle tissue volume, cm³)"
+    type: "continuous"
+    unit: "cm³"
+    group: "body_composition_volume_native"
+    role_in_analysis: "Native muscle tissue volume, indicator of muscle mass."
+    concept_in_original_paper: null
+
+  - name_in_dataset: "sat"
+    description: "SAT (Subcutaneous adipose tissue volume, cm³)"
+    type: "continuous"
+    unit: "cm³"
+    group: "body_composition_volume_native"
+    role_in_analysis: "Native subcutaneous adipose tissue volume."
+    concept_in_original_paper: null
+
+  - name_in_dataset: "vat"
+    description: "VAT (Visceral adipose tissue volume, cm³)"
+    type: "continuous"
+    unit: "cm³"
+    group: "body_composition_volume_native"
+    role_in_analysis: "Native visceral adipose tissue volume."
+    concept_in_original_paper: null
+
+  - name_in_dataset: "imat"
+    description: "IMAT (Intermuscular adipose tissue volume, cm³)"
+    type: "continuous"
+    unit: "cm³"
+    group: "body_composition_volume_native"
+    role_in_analysis: "Native intermuscular adipose tissue volume, indicator of muscle quality."
+    concept_in_original_paper: null
+
+  - name_in_dataset: "eat"
+    description: "EAT (Epicardial adipose tissue volume, cm³)"
+    type: "continuous"
+    unit: "cm³"
+    group: "body_composition_volume_native"
+    role_in_analysis: "Native epicardial adipose tissue volume."
+    concept_in_original_paper: null
+
+  - name_in_dataset: "pat"
+    description: "PAT (Pericardial adipose tissue volume, cm³)"
+    type: "continuous"
+    unit: "cm³"
+    group: "body_composition_volume_native"
+    role_in_analysis: "Native pericardial adipose tissue volume."
+    concept_in_original_paper: null
+
+  - name_in_dataset: "tat"
+    description: "TAT (Total adipose tissue volume, cm³)"
+    type: "continuous"
+    unit: "cm³"
+    group: "body_composition_volume_native"
+    role_in_analysis: "Native total adipose tissue volume."
+    concept_in_original_paper: null
+
+  # Body Composition - Indexed Metrics (Volume / height_m^2)
+  - name_in_dataset: "AMVI"
+    description: "AMVI (Abdominal Muscle Volume Index, muscle / height_m²)"
+    type: "continuous"
+    unit: "cm³/m²"
+    group: "body_composition_volume_indexed"
+    role_in_analysis: "Normalized muscle volume, key indicator of muscle mass adjusted for body size."
+    concept_in_original_paper: null
+    processing_notes: "Primary indexed measure of muscle mass."
+
+  - name_in_dataset: "AVATI"
+    description: "AVATI (Abdominal Visceral Adipose Tissue Index, vat / height_m²)"
+    type: "continuous"
+    unit: "cm³/m²"
+    group: "body_composition_volume_indexed"
+    role_in_analysis: "Normalized visceral adipose tissue volume."
+    concept_in_original_paper: null
+
+  - name_in_dataset: "ASATI"
+    description: "ASATI (Abdominal Subcutaneous Adipose Tissue Index, sat / height_m²)"
+    type: "continuous"
+    unit: "cm³/m²"
+    group: "body_composition_volume_indexed"
+    role_in_analysis: "Normalized subcutaneous adipose tissue volume."
+    concept_in_original_paper: null
+
+  - name_in_dataset: "AIMATI"
+    description: "AIMATI (Abdominal Intermuscular Adipose Tissue Index, imat / height_m²)"
+    type: "continuous"
+    unit: "cm³/m²"
+    group: "body_composition_volume_indexed"
+    role_in_analysis: "Normalized intermuscular adipose tissue volume."
+    concept_in_original_paper: null
+
+  - name_in_dataset: "ATATI"
+    description: "ATATI (Abdominal Total Adipose Tissue Index, tat / height_m²)"
+    type: "continuous"
+    unit: "cm³/m²"
+    group: "body_composition_volume_indexed"
+    role_in_analysis: "Normalized total adipose tissue volume."
+    concept_in_original_paper: null
+
+  - name_in_dataset: "ABI"
+    description: "ABI (Abdominal Bone Index, bone / height_m²)"
+    type: "continuous"
+    unit: "cm³/m²"
+    group: "body_composition_volume_indexed"
+    role_in_analysis: "Normalized bone volume."
+    concept_in_original_paper: null
+
+  # Body Composition - Ratios
+  - name_in_dataset: "VSR"
+    description: "VSR (Visceral-to-Subcutaneous adipose tissue Ratio, vat / sat)"
+    type: "continuous"
+    unit: "ratio"
+    group: "body_composition_ratio"
+    role_in_analysis: "Ratio indicating fat distribution pattern."
+    concept_in_original_paper: null
+
+  - name_in_dataset: "IMAC"
+    description: "IMAC (Intramuscular Adipose Tissue Content, imat / muscle)"
+    type: "continuous"
+    unit: "ratio"
+    group: "body_composition_ratio"
+    role_in_analysis: "Ratio indicating muscle quality / fat infiltration in muscle compartment."
+    concept_in_original_paper: null
+
+  - name_in_dataset: "FSM_Ratio"
+    description: "FSM Ratio (Fat-to-Skeletal Muscle Ratio, sat / muscle)"
+    type: "continuous"
+    unit: "ratio"
+    group: "body_composition_ratio"
+    role_in_analysis: "Ratio of subcutaneous fat to muscle."
+    concept_in_original_paper: null
+
+  - name_in_dataset: "FVM_Ratio"
+    description: "FVM Ratio (Visceral Fat-to-Muscle Ratio, vat / muscle)"
+    type: "continuous"
+    unit: "ratio"
+    group: "body_composition_ratio"
+    role_in_analysis: "Ratio of visceral fat to muscle."
+    concept_in_original_paper: null
+  
+  # Laboratory - MELD components / related
+  - name_in_dataset: "INR_listing"
+    description: "International Normalized Ratio at time of listing."
+    type: "continuous"
+    unit: "ratio"
+    group: "laboratory_listing"
+    role_in_analysis: "Component of MELD score, indicator of liver synthetic function."
+    concept_in_original_paper: null
+
+  - name_in_dataset: "Bilirubin_listing_mg_dl"
+    description: "Total Bilirubin at time of listing."
+    type: "continuous"
+    unit: "mg/dL"
+    group: "laboratory_listing"
+    role_in_analysis: "Component of MELD score, indicator of liver excretory function."
+    concept_in_original_paper: null
+    processing_notes: "Consider log-transformation if distribution is skewed."
+
+  - name_in_dataset: "Creatinine_listing_mg_dl"
+    description: "Serum Creatinine at time of listing."
+    type: "continuous"
+    unit: "mg/dL"
+    group: "laboratory_listing"
+    role_in_analysis: "Component of MELD score, indicator of renal function."
+    concept_in_original_paper: null
+
+  - name_in_dataset: "Sodium_listing_mmol_l"
+    description: "Serum Sodium at time of listing."
+    type: "continuous"
+    unit: "mmol/L"
+    group: "laboratory_listing"
+    role_in_analysis: "Component of MELD-Na score, indicator of electrolyte imbalance and prognosis."
+    concept_in_original_paper: null
+  
+  # Clinical Signs
+  - name_in_dataset: "Ascites_listing"
+    description: "Presence or grade of ascites at listing."
+    type: "categorical"
+    group: "clinical_signs_listing"
+    categories_in_dataset:
+      0: "No Ascites"
+      1: "Ascites Present" # Assuming 0/1. If graded (e.g., 0, 1, 2, 3), list all.
+    role_in_analysis: "Clinical sign of liver decompensation."
+    concept_in_original_paper: null
+
+  - name_in_dataset: "Encephalopathy_listing"
+    description: "Presence or grade of hepatic encephalopathy at listing."
+    type: "categorical"
+    group: "clinical_signs_listing"
+    categories_in_dataset:
+      0: "No Encephalopathy"
+      1: "Encephalopathy Present (any grade)" # Assuming 0/1. If graded, list all.
+    role_in_analysis: "Clinical sign of liver decompensation."
+    concept_in_original_paper: null

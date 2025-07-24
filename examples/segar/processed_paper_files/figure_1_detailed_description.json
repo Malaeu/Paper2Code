@@ -1,0 +1,44 @@
+[
+    {
+        "figure_id": "segar_figure1",
+        "source_image_path": "examples/segar/processed_paper_files/figures/figure1.png",
+        "caption_text": "Figure 1. Kaplan-Meier estimates of mortality on the waiting list according to race. CI indicates confidence interval.",
+        "llm_detailed_description": {
+            "type": "Kaplan-Meier plot",
+            "title_in_figure": null,
+            "x_axis": {
+                "label": "Time (Years)",
+                "units": "Years",
+                "range": "0-10"
+            },
+            "y_axis": {
+                "label": "Survival Probability",
+                "units": "Probability",
+                "range": "0-1"
+            },
+            "legend": [
+                {
+                    "label": "White",
+                    "style": "Solid line, upper curve"
+                },
+                {
+                    "label": "Black",
+                    "style": "Dashed line, lower curve"
+                }
+            ],
+            "data_representation": "Shows survival probability over time for two racial groups (White and Black) on the liver transplant waiting list.",
+            "key_patterns": "The curve for White patients is consistently above the curve for Black patients, indicating better survival.",
+            "statistical_annotations": "Log-rank p < 0.001",
+            "main_conclusion": "White patients had significantly better survival outcomes compared to Black patients.",
+            "style_description": {
+                "colors": [
+                    "blue",
+                    "red"
+                ],
+                "fonts": "Sans-serif, standard size",
+                "overall_look": "Standard academic plot"
+            },
+            "recreation_prompt_hint": "Generate a Kaplan-Meier plot for two groups comparing survival over 10 years. Include p-value from log-rank test."
+        }
+    }
+]

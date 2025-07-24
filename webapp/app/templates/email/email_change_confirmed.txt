@@ -1,0 +1,19 @@
+EMAIL CHANGE SUCCESSFUL - PAPER2CODE
+
+Hello {{ user.username }},
+
+Your email address has been successfully updated to {{ user.email }}.
+
+This email address will now be used for all communications from Paper2Code, including login notifications, security alerts, and project updates.
+
+If you did not make this change, please secure your account immediately by:
+1. Changing your password
+2. Contacting our support team
+
+Thank you for using Paper2Code!
+
+Best regards,
+The Paper2Code Team
+
+---
+This email was sent by Paper2Code. If you have any questions, please contact support.

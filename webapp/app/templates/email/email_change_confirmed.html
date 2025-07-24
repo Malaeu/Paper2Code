@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Email Change Complete - Paper2Code</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4a86e8;
+        }
+        .content {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #4a86e8;
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .footer {
+            font-size: 12px;
+            text-align: center;
+            color: #777;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">Paper2Code</div>
+    </div>
+    
+    <div class="content">
+        <h2>Email Change Successful</h2>
+        
+        <p>Hello {{ user.username }},</p>
+        
+        <p>Your email address has been successfully updated to <strong>{{ user.email }}</strong>.</p>
+        
+        <p>This email address will now be used for all communications from Paper2Code, including login notifications, security alerts, and project updates.</p>
+        
+        <p>If you did not make this change, please secure your account immediately by:</p>
+        <ol>
+            <li>Changing your password</li>
+            <li>Contacting our support team</li>
+        </ol>
+        
+        <p>Thank you for using Paper2Code!</p>
+        
+        <p>Best regards,<br>
+        The Paper2Code Team</p>
+    </div>
+    
+    <div class="footer">
+        <p>This email was sent by Paper2Code. If you have any questions, please contact support.</p>
+        <p>&copy; {% now 'utc', '%Y' %} Paper2Code. All rights reserved.</p>
+    </div>
+</body>
+</html>

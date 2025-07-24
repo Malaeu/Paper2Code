@@ -1,0 +1,17 @@
+YOUR EMAIL ADDRESS HAS BEEN CHANGED - PAPER2CODE
+
+Hello {{ user.username }},
+
+We're sending this notification to inform you that the email address for your Paper2Code account has been changed from {{ old_email }} to {{ user.email }}.
+
+IMPORTANT: If you did not request this change, please contact our support team immediately as your account may have been compromised.
+
+All future communications from Paper2Code will be sent to your new email address.
+
+Thank you for using Paper2Code!
+
+Best regards,
+The Paper2Code Team
+
+---
+This email was sent by Paper2Code. If you have any questions, please contact support.

@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  webapp:
+    build:
+      context: ./webapp
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_APP=run.py
+      - FLASK_ENV=development
+      - SECRET_KEY=dev-key-change-in-production
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DATABASE_URL=postgresql://paper2code:paper2code@db:5432/paper2code
+    volumes:
+      - ./webapp:/app
+      - ./codes:/app/codes
+      - ./data:/app/data
+      - webapp_uploads:/app/uploads
+    depends_on:
+      - redis
+      - db
+      - grobid
+    networks:
+      - paper2code-network
+
+  worker:
+    build:
+      context: ./webapp
+      dockerfile: Dockerfile
+    command: celery -A app.extensions.celery worker --loglevel=info
+    environment:
+      - FLASK_APP=run.py
+      - FLASK_ENV=development
+      - SECRET_KEY=dev-key-change-in-production
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DATABASE_URL=postgresql://paper2code:paper2code@db:5432/paper2code
+    volumes:
+      - ./webapp:/app
+      - ./codes:/app/codes
+      - ./data:/app/data
+      - webapp_uploads:/app/uploads
+    depends_on:
+      - redis
+      - db
+      - webapp
+    networks:
+      - paper2code-network
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - paper2code-network
+
+  db:
+    image: postgres:14
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=paper2code
+      - POSTGRES_PASSWORD=paper2code
+      - POSTGRES_DB=paper2code
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - paper2code-network
+
+  grobid:
+    image: lfoppiano/grobid:0.7.3
+    ports:
+      - "8070:8070"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8070/api/isalive"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - paper2code-network
+
+networks:
+  paper2code-network:
+    driver: bridge
+
+volumes:
+  webapp_uploads:
+  postgres_data:

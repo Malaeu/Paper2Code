@@ -1,0 +1,11 @@
+{
+  "devDependencies": {
+    "task-master-ai": "^0.13.2"
+  },
+  "scripts": {
+    "tm:start": "npx task-master-ai start",
+    "tm:status": "npx task-master-ai status",
+    "tm:analyze": "npx task-master-ai analyze",
+    "tm:plan": "npx task-master-ai plan"
+  }
+}
